@@ -1,8 +1,10 @@
+import { roll } from "../roll/roll_handler"
 import { get_skill_level, process_skill_value } from "../skills/skills"
 
 export function set_stat_listeners(sheet: Sheet<unknown>, stat: Stat) {
     sheet.get(stat + '_base').on('update', stat_update_handler(sheet, stat))
     sheet.get(stat + '_av').on('update', stat_update_handler(sheet, stat))
+    sheet.get(stat + "_label").on('click', function() { roll(sheet, stat, parseInt(sheet.get(stat).text()), []) })
 }
 
 export function set_BE_listeners(sheet: Sheet<CharData>) {
