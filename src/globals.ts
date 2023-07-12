@@ -1,0 +1,1 @@
+export const globalSheets: Record<string, Sheet<CharData>> = {}
