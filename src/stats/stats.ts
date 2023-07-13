@@ -1,43 +1,43 @@
-import { roll } from "../roll/roll_handler"
-import { get_skill_level, process_skill_value } from "../skills/skills"
+import { roll } from "../roll/rollHandler"
+import { getSkillLevel, processSkillValue } from "../skills/skills"
 
-export function set_stat_listeners(sheet: Sheet<unknown>, stat: Stat) {
-    sheet.get(stat + '_base').on('update', stat_update_handler(sheet, stat))
-    sheet.get(stat + '_av').on('update', stat_update_handler(sheet, stat))
+
+export function setStatListeners(sheet: Sheet<unknown>, stat: Stat) {
+    sheet.get(stat + '_base').on('update', statUpdateHandler(sheet, stat))
+    sheet.get(stat + '_av').on('update', statUpdateHandler(sheet, stat))
     sheet.get(stat + "_label").on('click', function() { roll(sheet, stat, parseInt(sheet.get(stat).text()), []) })
 }
 
-export function set_BE_listeners(sheet: Sheet<CharData>) {
-    sheet.get('BE_base').on('update', BE_update_handler(sheet, 'BE_av'))
-    sheet.get('BE_av').on('update', BE_update_handler(sheet, 'BE_base'))
+export function setBeListeners(sheet: Sheet<CharData>) {
+    sheet.get('BE_base').on('update', BeUpdateHandler(sheet, 'BE_av'))
+    sheet.get('BE_av').on('update', BeUpdateHandler(sheet, 'BE_base'))
 }
 
-export function set_BF_listeners(sheet: Sheet<CharData>) {
-    sheet.get('BF_base').on('update', BF_update_handler(sheet, 'BF_av'))
-    sheet.get('BF_av').on('update', BF_update_handler(sheet, 'BF_base'))
+export function setBfListeners(sheet: Sheet<CharData>) {
+    sheet.get('BF_base').on('update', BfUpdateHandler(sheet, 'BF_av'))
+    sheet.get('BF_av').on('update', BfUpdateHandler(sheet, 'BF_base'))
 }
 
-
-const stat_update_handler = function(sheet: Sheet<CharData>, stat: Stat) {
+const statUpdateHandler = function(sheet: Sheet<CharData>, stat: Stat) {
     return function handle_stat_update(component: Component<number>) {
         Tables.get("skills_basic").each(function(skill: SkillBasic) {
             if(skill.stat === stat) {
                 const stat_val = component.value() + (sheet.get(stat + "_av") as Component<number>).value()
-                const new_value = process_skill_value(stat_val, get_skill_level(sheet, skill))
+                const new_value = processSkillValue(stat_val, getSkillLevel(sheet, skill))
                 sheet.get("comp_" + skill.cmp_id + "_val").text(new_value.toString())
             }
         })
     }
 }
 
-const BE_update_handler = function(sheet: Sheet<CharData>, complement_label: string) {
-    return function handle_BE_update(component: Component<number>) {
+const BeUpdateHandler = function(sheet: Sheet<CharData>, complement_label: string) {
+    return function handleBeUpdate(component: Component<number>) {
         sheet.get("BE_reminder").value("BE : " + (component.value() + (sheet.get(complement_label) as Component<number>).value()))
     }
 }
 
-const BF_update_handler = function(sheet: Sheet<CharData>, complement_label: string) {
-    return function handle_BF_update(component: Component<number>) {
+const BfUpdateHandler = function(sheet: Sheet<CharData>, complement_label: string) {
+    return function handleBfUpdate(component: Component<number>) {
         // TODO
     }
 }
