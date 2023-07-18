@@ -57,7 +57,18 @@ declare global {
     interface LrEvent<T> {
         value(): T
     }
+
+    type WeaponData = {
+        bonus_bf_as_int: number,
+        type_arme_as_int: 1 | 2,
+        bonus_bf: boolean,
+        type_arme: "1" | "2"
+    }
     
+    type ArmorData = {
+        
+    }
+
     interface Component<T = unkown > {
         id(): string
         show():void
@@ -99,7 +110,9 @@ declare global {
         success: number
         value: number
         title: string
-        expression: string
+        expression: string,
+        total: number,
+        discarded: boolean
     }
 
     type DiceResultCallback = (e: string, callback: (sheet: Sheet<unknown>) => void) => void;

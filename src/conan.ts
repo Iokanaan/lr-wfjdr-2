@@ -1,8 +1,23 @@
+import { setupArmorRepeater } from "./armor/armorRepeater";
 import { globalSheets } from "./globals";
 import { rollResultHandler } from "./roll/rollHandler";
 import { setSkillListeners, setSkillValue } from "./skills/skills";
 import { setBeListeners, setBfListeners, setStatListeners } from "./stats/stats";
 import { setupWeaponRepeater } from "./weapons/weaponRepeater";
+
+/**
+ * TODO
+ * Magie
+ * Repeater Armes
+ * Repeater Armure
+ * Repeater objets
+ * Repeater comp
+ * poings / arme improvisée
+ * Monstres
+ * Weapon / object / armor crafter
+ * Encombrement
+ */
+
 
 // @ts-ignore
 init = function(sheet: Sheet<any>) {
@@ -18,6 +33,7 @@ init = function(sheet: Sheet<any>) {
             setSkillListeners(sheet, skill)
         })
         setupWeaponRepeater(sheet)
+        setupArmorRepeater(sheet)
     }
 }
 

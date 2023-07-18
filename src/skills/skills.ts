@@ -71,6 +71,6 @@ const clickSkillHandler = function(sheet: Sheet<CharData>, skill: SkillBasic) {
   return function rollSkill(component: Component<string>) {
     const skillValue = parseInt(sheet.get('comp_' + skill.cmp_id + '_val').text())
     const title = sheet.get('comp_' + skill.cmp_id + '_label').text()
-    roll(sheet, title, skillValue, ["attack"])
+    roll(sheet, title, skillValue, [])
   }
 }
