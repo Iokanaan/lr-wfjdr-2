@@ -9,13 +9,11 @@ export function setStatListeners(sheet: Sheet<unknown>, stat: Stat) {
 }
 
 export function setBeListeners(sheet: Sheet<CharData>) {
-    sheet.get('BE_base').on('update', BeUpdateHandler(sheet, 'BE_av'))
-    sheet.get('BE_av').on('update', BeUpdateHandler(sheet, 'BE_base'))
+    sheet.get('BE_base').on('update', BeUpdateHandler(sheet))
 }
 
-export function setBfListeners(sheet: Sheet<CharData>) {
-    sheet.get('BF_base').on('update', BfUpdateHandler(sheet, 'BF_av'))
-    sheet.get('BF_av').on('update', BfUpdateHandler(sheet, 'BF_base'))
+export function setEncombrement(sheet: Sheet<CharData>) {
+    sheet.get("encombrement_label").text(" / " + ((sheet.get("F") as Component<number>).value() * 10).toString())
 }
 
 const statUpdateHandler = function(sheet: Sheet<CharData>, stat: Stat) {
@@ -30,15 +28,9 @@ const statUpdateHandler = function(sheet: Sheet<CharData>, stat: Stat) {
     }
 }
 
-const BeUpdateHandler = function(sheet: Sheet<CharData>, complement_label: string) {
+const BeUpdateHandler = function(sheet: Sheet<CharData>) {
     return function handleBeUpdate(component: Component<number>) {
-        sheet.get("BE_reminder").value("BE : " + (component.value() + (sheet.get(complement_label) as Component<number>).value()))
-    }
-}
-
-const BfUpdateHandler = function(sheet: Sheet<CharData>, complement_label: string) {
-    return function handleBfUpdate(component: Component<number>) {
-        // TODO
+        sheet.get("BE_reminder").value("BE : " + component.value())
     }
 }
 

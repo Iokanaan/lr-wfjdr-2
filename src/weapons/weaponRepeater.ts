@@ -39,8 +39,4 @@ export const setupWeaponEditEntry = function(entry: Component<unknown>) {
         entry.find("bonus_bf_as_int").value(Number(cmp.value())) 
         log(entry.find("bonus_bf_as_int").value())
     })
-
-    entry.find("attributs").on("update", function(component: Component<String[]>) {
-        entry.find('attributs_label').value(component.value().join(", "))
-    })
 }

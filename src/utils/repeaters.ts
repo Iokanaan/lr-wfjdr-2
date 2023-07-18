@@ -6,7 +6,6 @@ export const setupRepeater = function(repeater: Component<any>, setupEditEntry: 
     repeater.on('click', function(rep: Component<Record<string, unknown>>) {
         each(rep.value(), function (_, entryId) {
             const entry = rep.find(entryId)
-            log(entry.find('mode').value())
             if(entry.find('mode').value() === 'EDIT') {
                 // On init uniquement les entries qui n'était pas en mode EDIT avant
                 if(entryStates[entryId] !== 'EDIT') {

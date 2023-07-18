@@ -1,8 +1,8 @@
-import { setupArmorRepeater } from "./armor/armorRepeater";
+import { setupArmorRepeater, setArmorSchema } from "./armor/armorRepeater";
 import { globalSheets } from "./globals";
 import { rollResultHandler } from "./roll/rollHandler";
 import { setSkillListeners, setSkillValue } from "./skills/skills";
-import { setBeListeners, setBfListeners, setStatListeners } from "./stats/stats";
+import { setBeListeners, setStatListeners } from "./stats/stats";
 import { setupWeaponRepeater } from "./weapons/weaponRepeater";
 
 /**
@@ -26,7 +26,6 @@ init = function(sheet: Sheet<any>) {
         Tables.get("stats").each(function(stat: StatObject) {
             setStatListeners(sheet, stat.id)
             setBeListeners(sheet)
-            setBfListeners(sheet)
         })
         Tables.get("skills_basic").each(function(skill) {
             setSkillValue(sheet, skill)
@@ -34,6 +33,7 @@ init = function(sheet: Sheet<any>) {
         })
         setupWeaponRepeater(sheet)
         setupArmorRepeater(sheet)
+        setArmorSchema(sheet, sheet.get("armor_repeater") as Component<Record<string, ArmorData>>)
     }
 }
 

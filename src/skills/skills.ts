@@ -74,3 +74,31 @@ const clickSkillHandler = function(sheet: Sheet<CharData>, skill: SkillBasic) {
     roll(sheet, title, skillValue, [])
   }
 }
+
+export const setupSkillRepeater = function(sheet: Sheet<unknown>) {
+  const repeater = sheet.get("skill_repeater") as Component<Record<string, SkillData>>
+  setupRepeater(repeater, setupSkillEditEntry)
+}
+
+const setupSkillEditEntry = function(entry: Component<unknown>) {
+  const nom = entry.find("nom_comp").value()
+  const comp_metadata = Tables.get("competences_av").get(nom)
+  if(comp_metadata.variable === "true") {
+    entry.find("specialite").show()
+  } else {
+    entry.find("specialite").hide()
+  }
+  const variable_comp: string[] = []
+  Tables.get("competences_av").each(function(comp) {
+    if(comp_metadata.variable === "true") {
+      variable_comp.push(comp.id)
+    }
+  })
+  entry.find("nom_comp").on("update", function(cmp: Component<string>) {
+    if(variable_comp.indexOf(cmp.value()) !== -1) {
+      entry.find("specialite").show()
+    } else {
+      entry.find("specialite").hide()
+    }
+  })
+}

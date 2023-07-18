@@ -32,6 +32,7 @@ declare global {
     declare const Tables: Table;
         interface Table {
         get(elem: 'skills_basic'): LrObject<SkillBasic>
+        get(elem: 'competences_av'): LrObject<SkillAv>
         get(id: string): LrObject
     }
 
@@ -47,6 +48,19 @@ declare global {
         name: string,
         stat: Stat,
         cmp_id: string
+    }
+
+    declare type SkillAv = {
+        id: string,
+        name: string,
+        stat: Stat,
+        variable: string
+    }
+
+    declare type SkillData = {
+        nom: string,
+        stat: string,
+        specilite: string
     }
 
     interface LrObject<T> {
@@ -66,7 +80,8 @@ declare global {
     }
     
     type ArmorData = {
-        
+        pts_armure?: number,
+        couverture?: ("Tête" | "Bras" | "Corps" | "Jambes")[]
     }
 
     interface Component<T = unkown > {
