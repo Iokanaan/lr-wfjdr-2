@@ -6,6 +6,8 @@ export function setStatListeners(sheet: Sheet<unknown>, stat: Stat) {
     sheet.get(stat + '_base').on('update', statUpdateHandler(sheet, stat))
     sheet.get(stat + '_av').on('update', statUpdateHandler(sheet, stat))
     sheet.get(stat + "_label").on('click', function() { roll(sheet, stat, parseInt(sheet.get(stat).text()), []) })
+    sheet.get('F_base').on('update', FUpdateHandler(sheet, (sheet.get("F_av") as Component<number>).value()))
+    sheet.get('F_av').on('update', FUpdateHandler(sheet, (sheet.get("F_base") as Component<number>).value()))
 }
 
 export function setBeListeners(sheet: Sheet<CharData>) {
@@ -30,7 +32,15 @@ const statUpdateHandler = function(sheet: Sheet<CharData>, stat: Stat) {
 
 const BeUpdateHandler = function(sheet: Sheet<CharData>) {
     return function handleBeUpdate(component: Component<number>) {
-        sheet.get("BE_reminder").value("BE : " + component.value())
+        sheet.get("BE_reminder").value("BE : " + component.value())
     }
 }
+
+const FUpdateHandler = function(sheet: Sheet<CharData>, complement: number) {
+    return function handleFUpdate(component: Component<number>) {
+        sheet.get("max_encombrement").text(" / " + ((component.value() + complement) * 10).toString())
+    }
+}
+
+
 

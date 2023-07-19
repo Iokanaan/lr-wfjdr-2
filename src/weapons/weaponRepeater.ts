@@ -13,7 +13,6 @@ export const setupWeaponRepeater = function(sheet: Sheet<unknown>) {
             damageBonus += parseInt((sheet.get("BF") as Component<string>).value())
         }
         const targetStat = data["type_arme"] === "1" ? "CC" : "CT"
-        log(data)
         roll(sheet, component.text(), parseInt(sheet.get(targetStat).text()), ["attack, damage_" + intToWord(damageBonus)])
     })
 }
@@ -37,6 +36,5 @@ export const setupWeaponEditEntry = function(entry: Component<unknown>) {
 
     entry.find("bonus_bf").on("update", function(cmp: Component<boolean>) { 
         entry.find("bonus_bf_as_int").value(Number(cmp.value())) 
-        log(entry.find("bonus_bf_as_int").value())
     })
 }

@@ -10,19 +10,37 @@ export const intToChar = function(n: number) {
 }
 
 export const intToWord = function(n: number) {
+    let neg = false
+    if(n < 0) {
+      neg=true
+      n=Math.abs(n)
+    }
     const chars = n.toString().split('')
     let word = ''
     for(var i in chars) {
         word += intToChar(parseInt(chars[i]))
     }
-    return word
+    if(neg) {
+        return "Z" + word
+    } else {
+        return word
+    }
 }
 
 export const wordToInt = function(str: string) {
+    let neg = false
+    if(str.startsWith("Z")) {
+        str = str.substring(1)
+      neg = true
+    } 
     const chars = str.split('')
     let res = ''
     for(var i in chars) {
         res += (chars[i].charCodeAt(0) - 97).toString()
     }
-    return parseInt(res)
+    if(neg) {
+        return -parseInt(res)
+    } else {
+        return parseInt(res)
+    }
 }

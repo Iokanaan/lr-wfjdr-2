@@ -1,4 +1,5 @@
 import { roll } from "../roll/rollHandler"
+import { setupRepeater } from "../utils/repeaters"
 
 export const setSkillValue = function(sheet: Sheet<CharData>, skill: SkillBasic) {
   const level = getSkillLevel(sheet, skill)

@@ -24,6 +24,8 @@ declare global {
     declare var init: (sheet: Sheet<any>) => void
     declare var drop: (from: Sheet<any>, to: Sheet<any>) => void
     declare var initRoll: (result: DiceResult, callback: DiceResultCallback) => void
+    declare var wait: (ms: number, callback: () => void) => void
+    declare var getCriticalHits: (result: DiceResult) => void
     
     declare const log: (s: any) => void;
 
@@ -94,6 +96,7 @@ declare global {
         on(type: string, handler: (event: LrEvent) => void)
         on(type: string, delegate: string, handler: (event: LrEvent) => void)
         index(): string
+        addClass(cl: string)
         removeClass(cl: string)
         text(): string
         text(txt: string)
