@@ -143,7 +143,8 @@ const handleD100 = function(sheet: Sheet<unknown>, result: DiceResult, rollTags:
 }
 
 const handleDamage = function(sheet: Sheet<unknown>, result: DiceResult, rollTags: RollTags) {
-    sheet.get("result_label").text(result.total.toString() + " : " + attackLocation(rollTags.referenceRoll))
+    sheet.get("result_label").text(result.total > 0 ? result.total.toString() : "0")
+    sheet.get("loc").text(attackLocation(rollTags.referenceRoll))
     // Si jet de dégâts normal, et qu'on fait 10, on affiche la confirmation du critique
     const target = rollTags.target !== undefined ? rollTags.target : 0
     if(!rollTags.isCrit) {

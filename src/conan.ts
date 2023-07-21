@@ -1,10 +1,11 @@
 import { setupArmorRepeater, setArmorSchema } from "./armor/armorRepeater";
 import { globalSheets } from "./globals";
-import { checkEncombrement, setMaxEncombrement } from "./leftPane/leftPane";
+import { switchCarrier } from "./help/carriers";
+import { checkEncombrement, setBlessuresListener, setClassEditor, setInitiativeListener, setMaxEncombrement, setRaceEditor, setSleepListener } from "./leftPane/leftPane";
 import { rollResultHandler } from "./roll/rollHandler";
 import { setSkillListeners, setSkillValue, setupSkillRepeater } from "./skills/skills";
 import { setBeListeners, setStatListeners } from "./stats/stats";
-import { setArmeImpro, setPugilat } from "./weapons/weaponBasics";
+import { setArmeImpro, setMunitionListener, setPugilat } from "./weapons/weaponBasics";
 import { setupWeaponRepeater } from "./weapons/weaponRepeater";
 
 /**
@@ -13,14 +14,27 @@ import { setupWeaponRepeater } from "./weapons/weaponRepeater";
  * Repeater objets
  * Repeater comp
  * Monstres
+ * notes munitions
+ * notes armes
+ * notes armurs
  * Weapon / object / armor crafter
- * Encombrement
+ * Encombrement calcul
+ * bindings
+ * drop dice
  */
 
 
 // @ts-ignore
 init = function(sheet: Sheet<any>) {
     if (sheet.id() === "main") {
+
+        if(sheet.getData()["race"] === undefined) {
+            sheet.setData({"race":"Humain"})
+        }
+
+        if(sheet.getData()["class"] === undefined) {
+            sheet.setData({"class":"Agitateur"})
+        }
 
         // Set sheet in global array
         globalSheets[sheet.getSheetId()] = sheet
@@ -43,6 +57,7 @@ init = function(sheet: Sheet<any>) {
         setPugilat(sheet)
         setArmeImpro(sheet, "CC")
         setArmeImpro(sheet, "CT")
+        setMunitionListener(sheet)
 
         // Armure
         setupArmorRepeater(sheet)
@@ -51,6 +66,15 @@ init = function(sheet: Sheet<any>) {
         // Volet gauche
         setMaxEncombrement(sheet)
         checkEncombrement(sheet)
+        setSleepListener(sheet)
+        setRaceEditor(sheet)
+        setClassEditor(sheet)
+        setInitiativeListener(sheet)
+        setBlessuresListener(sheet)
+
+        //Aide
+        switchCarrier(sheet)
+        
     }
 }
 

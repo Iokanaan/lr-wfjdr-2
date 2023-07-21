@@ -14,3 +14,15 @@ export const setArmeImpro = function(sheet: Sheet<CharData>, stat: Stat) {
         roll(sheet, "Arme improvisée", parseInt(sheet.get(stat).text()), ["attack", "damage_" + intToWord(damageBonus)])
     })
 }
+
+export const setMunitionListener = function(sheet: Sheet<CharData>) {
+    const row = sheet.get("munition_row")
+    row.hide()
+    sheet.get("munition_title").on("click", function(cmp: Component<unknown>) {
+        if(row.visible()) {
+            row.hide()
+        } else {
+            row.show()
+        }
+    })
+}

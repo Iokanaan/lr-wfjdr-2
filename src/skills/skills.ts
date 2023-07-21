@@ -78,6 +78,7 @@ const clickSkillHandler = function(sheet: Sheet<CharData>, skill: SkillBasic) {
 
 export const setupSkillRepeater = function(sheet: Sheet<unknown>) {
   const repeater = sheet.get("skill_repeater") as Component<Record<string, SkillData>>
+  log("set skill repeater")
   setupRepeater(repeater, setupSkillEditEntry)
 }
 
@@ -89,17 +90,48 @@ const setupSkillEditEntry = function(entry: Component<unknown>) {
   } else {
     entry.find("specialite").hide()
   }
+  if(comp_metadata.stat === "variable") {
+    entry.find("custom_stat_comp").show()
+    entry.find('comp_stat').value(entry.find("custom_stat_comp").value())
+    entry.find('fixed_stat').hide()
+  } else {
+    entry.find("custom_stat_comp").hide()
+    entry.find('comp_stat').value(comp_metadata.stat)
+    entry.find('fixed_stat').value("(" + comp_metadata.stat + ")")
+    entry.find('fixed_stat').show()
+  }
   const variable_comp: string[] = []
+  const variable_stat_comp: string[] = []
   Tables.get("competences_av").each(function(comp) {
-    if(comp_metadata.variable === "true") {
+    if(comp.variable === "true") {
       variable_comp.push(comp.id)
     }
+    if(comp.stat === "variable") {
+      variable_stat_comp.push(comp.id)
+    }
   })
+
   entry.find("nom_comp").on("update", function(cmp: Component<string>) {
     if(variable_comp.indexOf(cmp.value()) !== -1) {
       entry.find("specialite").show()
     } else {
       entry.find("specialite").hide()
+      entry.find("specialite").value(null)
+    }
+    if(variable_stat_comp.indexOf(cmp.value()) !== -1) {
+      entry.find("custom_stat_comp").show()
+      entry.find('comp_stat').value(entry.find("custom_stat_comp").value())
+      entry.find("fixed_stat").hide()
+    } else {
+      entry.find("custom_stat_comp").hide()
+      entry.find('comp_stat').value(Tables.get("competences_av").get(cmp.value()).stat)
+      entry.find('fixed_stat').value("(" + Tables.get("competences_av").get(cmp.value()).stat + ")")
+      entry.find('fixed_stat').show()
     }
   })
+
+  entry.find("custom_stat_comp").on("update", function(cmp: Component<string>) {
+    entry.find('comp_stat').value(cmp.value())
+  })
+
 }

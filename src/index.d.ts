@@ -35,7 +35,31 @@ declare global {
         interface Table {
         get(elem: 'skills_basic'): LrObject<SkillBasic>
         get(elem: 'competences_av'): LrObject<SkillAv>
+        get(elem: 'carriere'): LrObject<Carriere>
         get(id: string): LrObject
+    }
+
+    declare type Carriere = {
+        id: string,
+        name: string,
+        type: "base" | "avance",
+        CC: string,
+        CT: string,
+        F: string,
+        E: string,
+        Ag: string,
+        Int: string,
+        F: string,
+        Soc: string,
+        FM: string
+        A: string,
+        B: string,
+        Mag: string,
+        competences: string,
+        talents: string,
+        dotations: string,
+        acces: string,
+        debouches: string
     }
 
     declare type StatObject = {
@@ -55,7 +79,7 @@ declare global {
     declare type SkillAv = {
         id: string,
         name: string,
-        stat: Stat,
+        stat: Stat | "variable",
         variable: string
     }
 
@@ -101,6 +125,7 @@ declare global {
         text(): string
         text(txt: string)
         sheet(): Sheet<unknown>
+        visible(): boolean
     }
 
     interface ChoiceComponent<T = unknown> extends Component<T> {
