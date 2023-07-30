@@ -8,7 +8,7 @@ export default defineConfig({
     },
     lib: {
       // Could also be a dictionary or array of multiple entry points
-      entry: './src/conan.ts',
+      entry: './src/whjdr.ts',
       name: 'MyLib',
       // the proper extensions will be added
       fileName: 'my-lib',

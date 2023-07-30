@@ -1,6 +1,6 @@
 
-export const switchCarrier = function(sheet: Sheet<CharData>) {
-    const carr = Tables.get("carriere").get(sheet.get("class_txt").text())
+export const switchCarrier = function(sheet: Sheet<CharData>, newValue: string) {
+    const carr = Tables.get("carriere").get(newValue)
     sheet.get("display_carriere").value(carr.id)
     displayCarrier(sheet, carr)
     sheet.get("display_carriere").on("update", function(cmp: Component<string>) {
@@ -8,6 +8,7 @@ export const switchCarrier = function(sheet: Sheet<CharData>) {
         displayCarrier(sheet, carriere)
     })
 }
+
 
 const displayCarrier = function(sheet: Sheet<CharData>, carriere: Carriere) {
     sheet.get("CC_carr").text(carriere.CC !== '' ? carriere.CC : '-')
@@ -21,9 +22,9 @@ const displayCarrier = function(sheet: Sheet<CharData>, carriere: Carriere) {
     sheet.get("A_carr").text(carriere.A !== '' ? carriere.A : '-')
     sheet.get("B_carr").text(carriere.B !== '' ? carriere.B : '-')
     sheet.get("Mag_carr").text(carriere.Mag !== '' ? carriere.Mag : '-')
-
-    sheet.get("acces_carr").text(carriere.acces !== '' ? carriere.acces : '*Aucun*')
-    sheet.get("debouches_carr").text(carriere.debouches !== '' ? carriere.debouches : '*Aucun*')
-    sheet.get("comp_carr").text(carriere.competences !== '' ? carriere.competences : '*Aucunes*')
-    sheet.get("talents_carr").text(carriere.talents !== '' ? carriere.talents : '*Aucunes*')
+    sheet.get("M_carr").text(carriere.M !== '' ? carriere.M : '-')
+    sheet.get("acces_carr").text(carriere.acces !== '' ? carriere.acces : 'Aucun')
+    sheet.get("debouches_carr").text(carriere.debouche !== '' ? carriere.debouche : 'Aucun')
+    sheet.get("comp_carr").text(carriere.competences !== '' ? carriere.competences : 'Aucunes')
+    sheet.get("talents_carr").text(carriere.talents !== '' ? carriere.talents : 'Aucunes')
 }

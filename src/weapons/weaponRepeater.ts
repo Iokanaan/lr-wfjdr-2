@@ -17,9 +17,16 @@ export const setupWeaponRepeater = function(sheet: Sheet<unknown>) {
         if(data["qualite"] === "Exceptionnelle") {
             target += 5
         }
-        if(data["munitions_exception"] === "true") {
+        if(data["qualite"] === "Médiocre") {
+            target -= 5
+        }
+        if(sheet.get("munition_quality").value() === "Exceptionnelle" && data["type_munition"] !== "0") {
             target += 5
         }
+        if(sheet.get("munition_quality").value() === "Médiocre" && data["type_munition"] !== "0") {
+            target -= 5
+        }
+        
         roll(sheet, component.text(), target, ["attack, damage_" + intToWord(damageBonus)])
     })
 }
@@ -46,6 +53,6 @@ export const setupWeaponEditEntry = function(entry: Component<unknown>) {
     })
 
     entry.find("demi").on("click", function() {
-        entry.find("rechargement",).value("½")
+        entry.find("rechargement").value("½")
     })
 }

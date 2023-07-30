@@ -10,7 +10,9 @@ type RollTags = {
     isPercutante: boolean,
     isEpuisante: boolean,
     referenceRoll: number,
-    damageBonus: number
+    damageBonus: number,
+    isMagic: boolean,
+    isVulgaire: boolean
 }
 
 export const rollResultHandler = function(result: DiceResult, callback: DiceResultCallback) {
@@ -21,11 +23,15 @@ export const rollResultHandler = function(result: DiceResult, callback: DiceResu
         const rollTags = parseTags(sheet, result)
 
         if(!rollTags.isDamage) {
-            // Gestion Jet 1d100
-            handleD100(sheet, result, rollTags)
-            // Si jet d'attaque, on affiche les boutons de dégâts
-            if(rollTags.isAttack) {
-                handleAttack(sheet, rollTags)
+            if(!rollTags.isMagic) {
+                // Gestion Jet 1d100
+                handleD100(sheet, result, rollTags)
+                // Si jet d'attaque, on affiche les boutons de dégâts
+                if(rollTags.isAttack) {
+                    handleAttack(sheet, rollTags)
+                }
+            } else {
+                handleSpell(sheet, result, rollTags)
             }
         } else {
             handleDamage(sheet, result, rollTags)
@@ -40,6 +46,18 @@ export const roll = function(sheet: Sheet<unknown>, title: string, target: numbe
         .expression("(1d100)[" + tags.join(',') + "]")
         .title(title)
         .roll()
+}
+
+export const rollMagic = function(sheet: Sheet<unknown>, title: string, nDice: number, target: number, tags: string[]) {
+    tags.push("magic")
+    tags.push("sheet_" + intToWord(sheet.getSheetId()))
+    if(tags.indexOf("vulgaire") !== -1) {
+        nDice + 1
+    }
+    new RollBuilder(sheet)
+    .expression("(" + nDice + "d10)[" + tags.join(',') + "]")
+    .title(title)
+    .roll()
 }
 
 const rollDamage = function(sheet: Sheet<unknown>, title: string, nDice: number, damageBonus: number, tags: string[]) {
@@ -113,7 +131,9 @@ const parseTags = function(sheet: Sheet<unknown>, result: DiceResult): RollTags 
         'isPercutante': result.allTags.indexOf("percutante") !== -1,
         'isEpuisante': result.allTags.indexOf("epuisante") !== -1,
         'referenceRoll': referenceRoll,
-        'damageBonus': damageBonus
+        'damageBonus': damageBonus,
+        'isMagic': result.allTags.indexOf("magic") !== -1,
+        'isVulgaire': result.allTags.indexOf("vulgaire") !== -1
     }
 }
 
@@ -133,18 +153,21 @@ const handleD100 = function(sheet: Sheet<unknown>, result: DiceResult, rollTags:
     if(rollTags.target !== undefined) {
         const diff = result.total - rollTags.target
         if(diff > 0) {
-            sheet.get("result_label").text("Échoué de " + Math.abs(diff))
+            sheet.get("result_label").text(result.total.toString())
+            sheet.get("result_subtext").text("Échoué de " + Math.abs(diff))
         } else {
-            sheet.get("result_label").text("Réussi de " + Math.abs(diff))
+            sheet.get("result_label").text(result.total.toString())
+            sheet.get("result_subtext").text("Réussi de " + Math.abs(diff))
         }
     } else {
         sheet.get("result_label").text(result.total.toString())
     }
 }
 
+
 const handleDamage = function(sheet: Sheet<unknown>, result: DiceResult, rollTags: RollTags) {
     sheet.get("result_label").text(result.total > 0 ? result.total.toString() : "0")
-    sheet.get("loc").text(attackLocation(rollTags.referenceRoll))
+    sheet.get("result_subtext").text(attackLocation(rollTags.referenceRoll))
     // Si jet de dégâts normal, et qu'on fait 10, on affiche la confirmation du critique
     const target = rollTags.target !== undefined ? rollTags.target : 0
     if(!rollTags.isCrit) {
@@ -158,4 +181,29 @@ const handleDamage = function(sheet: Sheet<unknown>, result: DiceResult, rollTag
             }
         }
     }
+}
+
+const handleSpell = function(sheet: Sheet<unknown>, result: DiceResult, rollTags: RollTags) {
+    let nDices = result.all.length
+    if(rollTags.isVulgaire) {
+        nDices--
+    }
+    let total = 0
+    for(let i=0; i<nDices; i++) {
+        total += result.all[i].value
+    }
+    sheet.get("result_label").text(total.toString())
+    if(rollTags.target !== undefined) {
+        sheet.get("result_subtext").text(total >= rollTags.target ? "Réussi de " + (total - rollTags.target).toString() : "Échoué de " + (rollTags.target - total).toString())
+    }
+    const nbDicesByValue: Record<string, number>= { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0, "9": 0, "10": 0 }
+    for(let i=0; i<result.all.length; i++) {
+        nbDicesByValue[result.all[i].value]++
+    }
+    each(nbDicesByValue, function(val) {
+        if(val > 1) {
+            sheet.get("result_subtext_danger").text("Écho du Chaos")
+            return
+        }
+    })
 }

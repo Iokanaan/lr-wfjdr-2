@@ -44,3 +44,36 @@ export const wordToInt = function(str: string) {
         return parseInt(res)
     }
 }
+
+export function signal<T>(value: T): Signal<T> {
+    let state = value;
+    let handlers: Handler<T>[] = []
+    function _signal() {
+        return state;
+    }
+
+    _signal.set = function(value: T) {
+        state = value;
+        for(let i=0; i<handlers.length; i++) {
+            handlers[i](value)
+        }
+    }
+
+    _signal.subscribe = function(handler: Handler<T>) {
+        handlers.push(handler);
+        return function() { }
+    }
+
+    return _signal;
+}
+
+export function computed<T>(compute: () => T, dependencies: Signal<unknown>[] | Computed<unknown>[]): Computed<T> {
+    const s = signal(compute());
+    for(let i=0; i<dependencies.length; i++) {
+        dependencies[i].subscribe(function(c) {
+            s.set(compute())
+        })
+    }
+
+    return s;
+}

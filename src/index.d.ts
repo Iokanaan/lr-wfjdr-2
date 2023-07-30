@@ -5,6 +5,19 @@ import { WeaponSizeId, WeaponWieldingId, WeaponData } from "./weapon/types/weapo
 
 declare global { 
 
+    interface Signal<T> {
+        (): T;
+        set(t:T)
+        subscribe(t:Handler<T>): () => void;
+    }
+    
+    interface Computed<T> {
+        (): T;
+        subscribe(t:Handler<T>): () => void;
+    }
+
+    type Handler<T> = (t: T) => void
+
     declare class RollBuilder {
         constructor(sheet: Sheet<any>)
         expression: (s: string) => RollBuilder
@@ -34,9 +47,26 @@ declare global {
     declare const Tables: Table;
         interface Table {
         get(elem: 'skills_basic'): LrObject<SkillBasic>
+        get(elem: 'races'): LrObject<Race>
         get(elem: 'competences_av'): LrObject<SkillAv>
         get(elem: 'carriere'): LrObject<Carriere>
+        get(elem: 'talents'): LrObject<Talent>
+        get(elem: 'groupe_armes'): LrObject<GroupeArme>
+        get(elem: 'magies_communes' | 'domaines_occultes' | 'sombres_savoirs' | 'domaines_divins'): LrObject<DomaineMagie>
+        get(elem: 'magie_mineure'): LrObject<Spell>
         get(id: string): LrObject
+    }
+
+    type DomaineMagie = {
+        id: string,
+        name: string,
+        long_name: string
+    }
+
+    declare type Talent = {
+        id: string,
+        name: string,
+        description: string
     }
 
     declare type Carriere = {
@@ -54,12 +84,13 @@ declare global {
         FM: string
         A: string,
         B: string,
+        M: string,
         Mag: string,
         competences: string,
         talents: string,
         dotations: string,
         acces: string,
-        debouches: string
+        debouche: string
     }
 
     declare type StatObject = {
@@ -85,8 +116,8 @@ declare global {
 
     declare type SkillData = {
         nom: string,
-        stat: string,
-        specilite: string
+        comp_stat: Stat,
+        specialite: string
     }
 
     interface LrObject<T> {
@@ -102,12 +133,29 @@ declare global {
         bonus_bf_as_int: number,
         type_arme_as_int: 1 | 2,
         bonus_bf: boolean,
-        type_arme: "1" | "2"
+        type_arme: "1" | "2",
+        qualite: string
     }
     
     type ArmorData = {
         pts_armure?: number,
         couverture?: ("Tête" | "Bras" | "Corps" | "Jambes")[]
+    }
+
+    type DomaineObject = {
+        id: string,
+        name: string,
+        long_name: string
+    }
+
+    type Spell =  {
+        id: string,
+        name: string,
+        difficulte: number
+        incantation: string,
+        ingredient: string,
+        bonus_ingredient: number,
+        description: string
     }
 
     interface Component<T = unkown > {
@@ -132,7 +180,7 @@ declare global {
         setChoices(data: Record<string, string>)
     }
 
-    interface Sheet<T> {
+    interface Sheet<T = CharData> {
         id(): string
         getSheetId(): number
         //get(elem: 'weapons'): Component<Record<string, WeaponData>>,

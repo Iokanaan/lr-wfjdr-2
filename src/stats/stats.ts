@@ -1,46 +1,46 @@
+import { signals } from "../globals";
 import { roll } from "../roll/rollHandler"
-import { getSkillLevel, processSkillValue } from "../skills/skills"
+import { computed, signal } from "../utils/utils"
 
 
-export function setStatListeners(sheet: Sheet<unknown>, stat: Stat) {
-    sheet.get(stat + '_base').on('update', statUpdateHandler(sheet, stat))
-    sheet.get(stat + '_av').on('update', statUpdateHandler(sheet, stat))
-    sheet.get(stat + "_label").on('click', function() { roll(sheet, stat, parseInt(sheet.get(stat).text()), []) })
-    sheet.get('F_base').on('update', FUpdateHandler(sheet, (sheet.get("F_av") as Component<number>).value()))
-    sheet.get('F_av').on('update', FUpdateHandler(sheet, (sheet.get("F_base") as Component<number>).value()))
+export function setStatListeners(sheet: Sheet, stat: Stat) {
+
+    const base = signal(sheet.get(stat + "_base").value() as number);
+    const av = signal(sheet.get(stat + "_av").value() as number);
+    signals[stat] = computed(function() { return base() + av() }, [base, av]);
+    
+    sheet.get(stat + '_base').on('update', function(cmp: Component) { 
+        base.set(cmp.value()) 
+    })
+    sheet.get(stat + '_av').on('update', function(cmp: Component) { 
+        av.set(cmp.value()) 
+    }) 
+    sheet.get(stat + "_label").on('click', function() { 
+        roll(sheet, stat, parseInt(sheet.get(stat).text()), []) 
+    })
+}
+
+export function setBStatListener(sheet: Sheet) {
+    const base = signal(sheet.get("B_base").value() as number);
+    const av = signal(sheet.get("B_av").value() as number);
+    signals['B'] = computed(function() { return base() + av() }, [base, av]);
+    signals['BE'] = computed(function() { return Math.floor((base() + av()) / 10) }, [base, av] )
+    sheet.get('B_base').on('update', function(cmp: Component) { 
+        base.set(cmp.value()) 
+    })
+    sheet.get('B_av').on('update', function(cmp: Component) { 
+        av.set(cmp.value()) 
+    })
 }
 
 export function setBeListeners(sheet: Sheet<CharData>) {
     sheet.get('BE_base').on('update', BeUpdateHandler(sheet))
 }
 
-export function setEncombrement(sheet: Sheet<CharData>) {
-    sheet.get("encombrement_label").text(" / " + ((sheet.get("F") as Component<number>).value() * 10).toString())
-}
-
-const statUpdateHandler = function(sheet: Sheet<CharData>, stat: Stat) {
-    return function handle_stat_update(component: Component<number>) {
-        Tables.get("skills_basic").each(function(skill: SkillBasic) {
-            if(skill.stat === stat) {
-                const stat_val = component.value() + (sheet.get(stat + "_av") as Component<number>).value()
-                const new_value = processSkillValue(stat_val, getSkillLevel(sheet, skill))
-                sheet.get("comp_" + skill.cmp_id + "_val").text(new_value.toString())
-            }
-        })
-    }
-}
-
 const BeUpdateHandler = function(sheet: Sheet<CharData>) {
     return function handleBeUpdate(component: Component<number>) {
-        sheet.get("BE_reminder").value("BE : " + component.value())
+        sheet.get("BE_reminder").text("BE : " + component.value())
     }
 }
-
-const FUpdateHandler = function(sheet: Sheet<CharData>, complement: number) {
-    return function handleFUpdate(component: Component<number>) {
-        sheet.get("max_encombrement").text(" / " + ((component.value() + complement) * 10).toString())
-    }
-}
-
 
 
