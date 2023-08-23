@@ -16,15 +16,30 @@ export function setStatListeners(sheet: Sheet, stat: Stat) {
         av.set(cmp.value()) 
     }) 
     sheet.get(stat + "_label").on('click', function() { 
-        roll(sheet, stat, parseInt(sheet.get(stat).text()), []) 
+        roll(sheet, stat, signals[stat](), []) 
     })
+    
+}
+
+export function setBonuses(sheet: Sheet) {
+    signals['BE'] = computed(function() { 
+        const value = Math.floor((signals['E']()) / 10)
+        sheet.get("BE").value(value)
+        sheet.get("BE_reminder").text("BE : " + value)
+        return value
+    }, [signals['E']] )
+    signals['BF'] = computed(function() {
+        const value = Math.floor((signals['F']()) / 10) 
+        sheet.get("BF").value(value)
+        return value
+    }, [signals['F']] )
+    
 }
 
 export function setBStatListener(sheet: Sheet) {
     const base = signal(sheet.get("B_base").value() as number);
     const av = signal(sheet.get("B_av").value() as number);
     signals['B'] = computed(function() { return base() + av() }, [base, av]);
-    signals['BE'] = computed(function() { return Math.floor((base() + av()) / 10) }, [base, av] )
     sheet.get('B_base').on('update', function(cmp: Component) { 
         base.set(cmp.value()) 
     })
@@ -32,15 +47,3 @@ export function setBStatListener(sheet: Sheet) {
         av.set(cmp.value()) 
     })
 }
-
-export function setBeListeners(sheet: Sheet<CharData>) {
-    sheet.get('BE_base').on('update', BeUpdateHandler(sheet))
-}
-
-const BeUpdateHandler = function(sheet: Sheet<CharData>) {
-    return function handleBeUpdate(component: Component<number>) {
-        sheet.get("BE_reminder").text("BE : " + component.value())
-    }
-}
-
-

@@ -26,13 +26,15 @@ export const setupRepeater2 = function(repeater: Component<any>, setupEditEntry:
 
     each(repeater.value(), function(_, entryId) {
         entryStates[entryId] = 'VIEW'
+        log("init " + entryId)
         setupViewEntry(repeater.find(entryId))
     })
-    
+    log('initialized repeater')
     // Gestion de l'initialisation du mode édition
     repeater.on('click', function(rep: Component<Record<string, unknown>>) {
         each(rep.value(), function (_, entryId) {
             const entry = rep.find(entryId)
+            log("clicked")
             if(entry.find('mode').value() === 'EDIT') {
                 // On init uniquement les entries qui n'était pas en mode EDIT avant
                 if(entryStates[entryId] !== 'EDIT') {
@@ -49,6 +51,7 @@ export const setupRepeater2 = function(repeater: Component<any>, setupEditEntry:
                 // L'entry est stockée en mode VIEW
                 entryStates[entryId] = 'VIEW'
             }
+            log("son")
         })
     })
 }

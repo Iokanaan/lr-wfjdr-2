@@ -14,60 +14,67 @@ Tables.get("competences_av").each(function(comp) {
 })
 
 export const setupBasicSkill = function(sheet: Sheet, skill: SkillBasic) {
-  setupSkill(sheet.get, skill.id, skill.cmp_id, skill.stat)
+  setupSkill(sheet.get, skill.cmp_id, skill.stat)
 }
 
 export const setupSkillViewEntry = function(entry: Component<SkillData>) {
-  setupSkill(entry.find, entry.id() + "_skill", "av", entry.value().comp_stat)
+  log("setup skill " + entry.id() )
+  setupSkill(entry.find, "av", entry.value().comp_stat)
 }
 
 export const setupSkillEditEntry = function(entry: Component) {
 
-  const signalComp = signal(Tables.get("competences_av").get(entry.find("nom_comp").value()))
-  const signalCustomStat = signal(entry.find("custom_stat_comp").value())
+  const skill = signal(Tables.get("competences_av").get(entry.find("nom_comp").value()))
+
+  // Stat if custom
+  const customStat = signal(entry.find("custom_stat_comp").value())
   
-  const signalPredefinedStat = computed(function() {
-    if(signalComp().stat !== "variable") {
+  // Stat of skill if predefined, else null
+  const predefStat = computed(function() {
+    if(skill().stat !== "variable") {
       entry.find("custom_stat_comp").hide()
-      entry.find('fixed_stat').text("(" + signalComp().stat + ")")
+      entry.find('fixed_stat').text("(" + skill().stat + ")")
       entry.find('fixed_stat').show()
-      return signalComp().stat
+      return skill().stat
     } else {
       entry.find("custom_stat_comp").show()
       entry.find('fixed_stat').hide()
       return null
     }
-  }, [signalComp])
+  }, [skill])
   
+  // Stat for skill
   computed(function() {
-    const compStat = signalPredefinedStat() !== null ? signalPredefinedStat() : signalCustomStat()
+    const compStat = predefStat() !== null ? predefStat() : customStat()
     entry.find("comp_stat").value(compStat)
     return compStat
-  }, [signalPredefinedStat, signalCustomStat])
+  }, [predefStat, customStat])
 
+  // Display specialite depending on skill
   computed(function() {
-    if(variable_comp.indexOf(signalComp()) !== -1) {
+    if(skill().variable === "true") {
       entry.find("specialite").show()
     } else {
       entry.find("specialite").hide()
+      entry.find("specialite").value(null)
     }
-
-  }, [signalComp])
+  }, [skill])
 
   entry.find("nom_comp").on("update", function(cmp: Component<string>) {
-    signalComp.set(cmp.value())
+    skill.set(Tables.get("competences_av").get(cmp.value()))
   })
 
   entry.find("custom_stat_comp").on("update", function(cmp: Component<string>) {
-    signalCustomStat.set(cmp.value())
+    customStat.set(cmp.value())
   })
 
 }
 
-const setupSkill = function(get: (id: string) => Component, skillId: string, skillCmpId: string, stat: Stat) {
+const setupSkill = function(get: (id: string) => Component, skillCmpId: string, stat: Stat) {
   const signalAq = signal(get('comp_' + skillCmpId + '_acq').value())
   const signal10 = signal(get('comp_' + skillCmpId + '_10').value())
   const signal20 = signal(get('comp_' + skillCmpId + '_20').value())
+  log("set computed level")
   const signalLevel = computed(
     function() {
       if(!signalAq()) { return 0 }
@@ -76,9 +83,10 @@ const setupSkill = function(get: (id: string) => Component, skillId: string, ski
       return 3
     }
   , [signalAq, signal10, signal20])
-  signals[skillId] = computed(
+  log("set computed val")
+  const skillVal = computed(
     function() {
-      let value = signals[stat]() as number
+      let value = signals[stat]()
       switch(signalLevel()) {
         case 1:
           break
@@ -96,10 +104,16 @@ const setupSkill = function(get: (id: string) => Component, skillId: string, ski
       return value
     }
   , [signals[stat], signalLevel])
+  log("set listeners")
+  log('comp_' + skillCmpId + '_acq')
   get('comp_' + skillCmpId + '_acq').on('update', function(cmp) { signalAq.set(cmp.value()) })
+  log('comp_' + skillCmpId + '_10')
   get('comp_' + skillCmpId + '_10').on('update', function(cmp) { signal10.set(cmp.value()) })
+  log('comp_' + skillCmpId + '_20')
   get('comp_' + skillCmpId + '_20').on('update', function(cmp) { signal20.set(cmp.value()) })
+  log('comp_' + skillCmpId + '_label')
   get('comp_' + skillCmpId + '_label').on('click', function(cmp) {
-     roll(cmp.sheet(), cmp.text(), signals[skillId]() as number, [])
+     roll(cmp.sheet(), cmp.text(), skillVal(), [])
   })
+  log("done")
 }

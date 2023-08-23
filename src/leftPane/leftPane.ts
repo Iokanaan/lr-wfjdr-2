@@ -3,17 +3,16 @@ import { switchCarrier } from "../help/carriers"
 import { computed, signal } from "../utils/utils"
 
 export const setMaxEncombrement = function(sheet: Sheet) {
-    const forceSignal = signals['F'] as Computed<number>
     const maxEncLabel = sheet.get("max_encombrement")
     signals["enc_max"] = computed(function() {
-        maxEncLabel.text(" / " + (forceSignal() * 10).toString())
-        return forceSignal() * 10
-    }, [forceSignal])
+        maxEncLabel.text(" / " + (signals['F']() * 10).toString())
+        return signals['F']() * 10
+    }, [signals['F']])
 }
 
 export const checkEncombrement = function(sheet: Sheet) {
-    const encMax = signals["enc_max"] as Computed<number>
-    const encVal = signal(sheet.get("encombrement_total").value()) as Signal<number>
+    const encMax = signals["enc_max"]
+    const encVal = signal(sheet.get("encombrement_total").value() as number)
     const encMaxCmp = sheet.get("max_encombrement")
     const encValCmp = sheet.get("encombrement_total")
     log(encMax())
@@ -33,7 +32,7 @@ export const checkEncombrement = function(sheet: Sheet) {
 
 export const setSleepListener = function(sheet: Sheet) {
     sheet.get("sleep").on("click", function() {
-        const bActuel = signals['B_actuel'] as Signal<number> 
+        const bActuel = signals['B_actuel']
         if(bActuel() > 3 && bActuel() <  (signals['B']() as number)) {
             bActuel.set(bActuel() + 1)
             sheet.get("B_actuel").value(bActuel())
@@ -47,7 +46,7 @@ export const setRaceEditor = function(sheet: Sheet) {
     const raceTextCmp = sheet.get("race_txt")
     const raceLabelCmp = sheet.get("race_label")
     const customRaceCmp = sheet.get("custom_race")
-    const race = signal(raceCmp.value()) as Signal<string>
+    const race = signal(raceCmp.value() as string)
     
     computed(function() {
         raceCmp.hide()
@@ -87,7 +86,7 @@ export const setClassEditor = function(sheet: Sheet) {
     const classTextCmp = sheet.get("class_txt")
     const classLabelCmp = sheet.get("class_label")
     const customClassCmp = sheet.get("custom_class")
-    const classSignal = signal(classCmp.value()) as Signal<string>
+    const classSignal = signal(classCmp.value() as string)
     
     computed(function() {
         classCmp.hide()
@@ -138,10 +137,9 @@ export const setInitiativeListener = function(sheet: Sheet<CharData>) {
 export const setBlessuresListener = function(sheet: Sheet<CharData>) {
     const bActuelCmp = sheet.get("B_actuel")
     const bMaxCmp = sheet.get("b_max")
-    const bActuel = signal(sheet.get("B_actuel").value())
-    signals["B_actuel"] = bActuel
+    signals["B_actuel"] = signal(sheet.get("B_actuel").value() as number)
     computed(function() {
-        if(bActuel() as number <= 3) {
+        if(signals["B_actuel"]() as number <= 3) {
             bActuelCmp.addClass("text-danger")
             bActuelCmp.removeClass("text-light")
             bMaxCmp.addClass("text-danger")
@@ -152,6 +150,6 @@ export const setBlessuresListener = function(sheet: Sheet<CharData>) {
             bMaxCmp.removeClass("text-danger")
             bMaxCmp.addClass("text-light")
         }
-    }, [bActuel])
-    bActuelCmp.on("update", function(cmp: Component) { bActuel.set(cmp.value()) })
+    }, [signals["B_actuel"]])
+    bActuelCmp.on("update", function(cmp: Component) { signals["B_actuel"].set(cmp.value()) })
 }

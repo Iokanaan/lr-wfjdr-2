@@ -129,12 +129,31 @@ declare global {
         value(): T
     }
 
+    type WeaponGroup = {
+        id: string,
+        name: string
+    }
+
     type WeaponData = {
+        nom_arme: string,
+        groupe_arme: string,
+        degats: number,
+        disponibilite: string,
+        cout: number,
+        portee_courte: number,
+        portee_longue: number,
+        encombrement: number,
+        type_munition: string,
+        use_powder: booelean
         bonus_bf_as_int: number,
+        type_arme: "1" | "2",
         type_arme_as_int: 1 | 2,
         bonus_bf: boolean,
-        type_arme: "1" | "2",
-        qualite: string
+        bonus_bf_as_int: 0 | 1
+        qualite: string,
+        notes: string
+        attributs: string[],
+        rechargement: string
     }
     
     type ArmorData = {

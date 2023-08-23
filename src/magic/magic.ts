@@ -4,7 +4,7 @@ import { intToWord } from "../utils/utils"
 
 export const setupMagicRepeater = function(sheet: Sheet<unknown>) {
     const repeater = sheet.get("magic_repeater") as Component<Record<string, unknown>>
-    setupRepeater(repeater, setupMagicEditEntry)
+    setupRepeater2(repeater, setupMagicEditEntry, function() {})
     repeater.on("click", "spell_label", function(component: Component<unknown>) {
         const data = repeater.value()[component.index()]
         const entry = repeater.find(component.index())

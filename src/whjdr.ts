@@ -6,7 +6,7 @@ import { checkEncombrement, setBlessuresListener, setClassEditor, setInitiativeL
 import { hideMagicDescription, setupMagicRepeater } from "./magic/magic";
 import { rollResultHandler } from "./roll/rollHandler";
 import { setupBasicSkill, setupSkillEditEntry, setupSkillViewEntry } from "./skills/skills";
-import { setBStatListener, setBeListeners, setStatListeners } from "./stats/stats";
+import { setBStatListener, setBonuses, setStatListeners } from "./stats/stats";
 import { hideTalentDescription, setupTalentRepeater } from "./talent/talent";
 import { setupRepeater2 } from "./utils/repeaters";
 import { setArmeImpro, setMunitionListener, setPugilat } from "./weapons/weaponBasics";
@@ -53,8 +53,8 @@ init = function(sheet: Sheet<any>) {
             // Stats
             Tables.get("stats").each(function(stat: StatObject) {
                 setStatListeners(sheet, stat.id)
-                setBeListeners(sheet)
             })
+            setBonuses(sheet)
             setBStatListener(sheet)
         } catch(e) {
             log("Error initializing stats")
@@ -67,6 +67,7 @@ init = function(sheet: Sheet<any>) {
             setupRepeater2(sheet.get("skill_repeater"), setupSkillEditEntry, setupSkillViewEntry)
         } catch(e) {
             log("Error initializing skills")
+            log(e.message)
         }
 
         try {
@@ -79,7 +80,7 @@ init = function(sheet: Sheet<any>) {
             log("Error initializing talents")
         }
 
-        try {
+        //try {
             // Armes
             if(sheet.get("munition_quality").value() === null) {
                 sheet.get("munition_quality").value("Moyenne")
@@ -89,9 +90,9 @@ init = function(sheet: Sheet<any>) {
             setArmeImpro(sheet, "CC")
             setArmeImpro(sheet, "CT")
             setMunitionListener(sheet)           
-        } catch(e) {
+        /*} catch(e) {
             log("Error initializing weapons")
-        }
+        }*/
 
         try {
             // Armure
@@ -115,11 +116,13 @@ init = function(sheet: Sheet<any>) {
         try {
             //Magie
             setupMagicRepeater(sheet)
+            log("magic repeater")
+            log((sheet.get("magic_repeater") as Component<Record<string, Spell>>).value())
             each((sheet.get("magic_repeater") as Component<Record<string, Spell>>).value(), function(_, entryId) {
                 hideMagicDescription(sheet.get("magic_repeater").find(entryId))
             })
         } catch(e) {
-            log("Error initializing left pane")
+            log("Error initializing magic")
         }
 
         // Bio
