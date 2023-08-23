@@ -2,7 +2,7 @@ import { rollMagic } from "../roll/rollHandler"
 import { setupRepeater2 } from "../utils/repeaters"
 import { computed, intToWord, signal } from "../utils/utils"
 
-const magies = {} as Record<string, Record<string, Record<string, string>>>
+const magies = {} as Record<string, Record<string, Record<string, Spell>>>
 const typesMagie = Tables.get("types_magie")
 typesMagie.each(function(type) {
     log(type)
@@ -35,7 +35,7 @@ const setupMagicViewEntry = function(sheet: Sheet) {
     return function(entry: Component) {
 
         entry.find("spell_label").on("click", function(component: Component<unknown>) {
-            const data = (sheet.get("magic_repeater").value() as Record<string, SpellData>)[component.index()]
+            const data = (sheet.get("magic_repeater").value() as Record<string, SpellKnown>)[component.index()]
             let target = data.difficulte
             if(data.use_ingredient === true) {
                 target -= data.bonus_ingredient
@@ -64,44 +64,38 @@ const setupMagicEditEntry = function(entry: Component) {
     const mainCategoryCmp = entry.find("main_category") as Component<string>
     const mainCategory = signal(mainCategoryCmp.value())
     const subCategoryCmp = entry.find("sub_category") as ChoiceComponent
+    const spellCmp = entry.find("spell_choice")
     const spellDomainCmp = entry.find("spell_domain")
+    const subCategory = signal(subCategoryCmp.value() !== undefined ? subCategoryCmp.value() as string : Object.keys(magies[mainCategory()])[0])
+    const spellChoice = signal(spellCmp.value !== undefined ? spellCmp.value() : Object.keys(magies[mainCategory()][subCategory()])[0])
 
-    const subCategory = computed(function() {
-        if(mainCategory() === "magie_mineure") {
-            subCategoryCmp.setChoices({"magie_mineure": "Magie mineure"})
-            subCategoryCmp.value("magie_mineure");
-            return "magie_mineure"
-        }
-        const domaines = {} as Record<string, string>
-        Tables.get(mainCategory()).each(function(domaine: DomaineObject) {
-            domaines[domaine.id] = domaine.long_name;
-        })
-        subCategoryCmp.setChoices(domaines);
-        return domaines[0]
-    }, [mainCategory])
+    mainCategoryCmp.on("update", function(cmp) {
+        mainCategory.set(cmp.value())
+        subCategory.set(Object.keys(magies[mainCategory()])[0])
+        spellDomainCmp.value(Tables.get(mainCategory()).get(subCategory()).name)
+        spellChoice.set(Object.keys(magies[mainCategory()][subCategory()])[0])
+    })
 
-    const spellDomainLabel = computed(function() {
-        const val = Tables.get(mainCategory()).get(subCategory()).name
-        spellDomainCmp.value(val)
-        return val
-    }, [mainCategory, subCategory])
+    subCategoryCmp.on("update", function(cmp) {
+        subCategory.set(cmp.value())
+        spellDomainCmp.value(Tables.get(mainCategory()).get(subCategory()).name)
+        spellChoice.set(Object.keys(magies[mainCategory()][subCategory()])[0])
+    })
 
-    const spellKey = computed(function() {
-        Tables.get(subCategory()).each(function(domaine: DomaineObject) {
-            subCategories[domaine.id] = domaine.long_name;
-        })
-        
-    }, [subCategory])
+    spellCmp.on("update", function(cmp) {
+        spellChoice.set(cmp.value())
+    })
 
-    const spellData = computed(function(){
-        const spell_data = Tables.get(subCategory()).get(spellKey())
-        entry.find("spell_name").value(spell_data.name)
-        entry.find("spell_description").value(spell_data.description)
-        entry.find("incantation").value(spell_data.incantation)
-        entry.find("difficulte").value(spell_data.difficulte)
-        entry.find("ingredient").value(spell_data.ingredient)
-        entry.find("bonus_ingredient").value(spell_data.bonus_ingredient)
-    }, [subCategory, spellKey])
+    const spell = computed(function(){
+        const spellData = magies[mainCategory()][subCategory()][spellChoice()]
+        entry.find("spell_name").value(spellData.name)
+        entry.find("spell_description").value(spellData.description)
+        entry.find("incantation").value(spellData.incantation)
+        entry.find("difficulte").value(spellData.difficulte)
+        entry.find("ingredient").value(spellData.ingredient)
+        entry.find("bonus_ingredient").value(spellData.bonus_ingredient)
+        return spellData
+    }, [spellChoice])
 
 }
 

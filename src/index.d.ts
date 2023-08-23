@@ -134,12 +134,6 @@ declare global {
         name: string
     }
 
-    type SpellData = {
-        difficulte: number,
-        bonus_ingredient: number,
-        use_ingredient: boolean
-    }
-
     type WeaponData = {
         nom_arme: string,
         groupe_arme: string,
@@ -181,6 +175,10 @@ declare global {
         ingredient: string,
         bonus_ingredient: number,
         description: string
+    }
+
+    type SpellKnown = Spell & {
+        use_ingredient: boolean
     }
 
     interface Component<T = unkown > {
