@@ -18,7 +18,6 @@ export const setupBasicSkill = function(sheet: Sheet, skill: SkillBasic) {
 }
 
 export const setupSkillViewEntry = function(entry: Component<SkillData>) {
-  log("setup skill " + entry.id() )
   setupSkill(entry.find, "av", entry.value().comp_stat)
 }
 
@@ -74,7 +73,6 @@ const setupSkill = function(get: (id: string) => Component, skillCmpId: string, 
   const signalAq = signal(get('comp_' + skillCmpId + '_acq').value())
   const signal10 = signal(get('comp_' + skillCmpId + '_10').value())
   const signal20 = signal(get('comp_' + skillCmpId + '_20').value())
-  log("set computed level")
   const signalLevel = computed(
     function() {
       if(!signalAq()) { return 0 }
@@ -83,7 +81,6 @@ const setupSkill = function(get: (id: string) => Component, skillCmpId: string, 
       return 3
     }
   , [signalAq, signal10, signal20])
-  log("set computed val")
   const skillVal = computed(
     function() {
       let value = signals[stat]()
@@ -104,16 +101,10 @@ const setupSkill = function(get: (id: string) => Component, skillCmpId: string, 
       return value
     }
   , [signals[stat], signalLevel])
-  log("set listeners")
-  log('comp_' + skillCmpId + '_acq')
   get('comp_' + skillCmpId + '_acq').on('update', function(cmp) { signalAq.set(cmp.value()) })
-  log('comp_' + skillCmpId + '_10')
   get('comp_' + skillCmpId + '_10').on('update', function(cmp) { signal10.set(cmp.value()) })
-  log('comp_' + skillCmpId + '_20')
   get('comp_' + skillCmpId + '_20').on('update', function(cmp) { signal20.set(cmp.value()) })
-  log('comp_' + skillCmpId + '_label')
   get('comp_' + skillCmpId + '_label').on('click', function(cmp) {
      roll(cmp.sheet(), cmp.text(), skillVal(), [])
   })
-  log("done")
 }

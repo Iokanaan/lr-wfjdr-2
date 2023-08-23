@@ -30,8 +30,6 @@ const setupTalentEditEntry = function(entry: Component<unknown>) {
         "magie_mineure": {}
     }
     
-    log("tables setupt")
-
     Tables.get("groupe_armes").each(function(val) {
         talents_choices["maitrise"][val.name] = val.name  
     })
@@ -51,8 +49,6 @@ const setupTalentEditEntry = function(entry: Component<unknown>) {
         talents_choices["magie_mineure"][val.name] = val.name  
     })
 
-    log("choices initis")
-
     const subtypeChoiceCmp = entry.find("subtype_choice") as ChoiceComponent
     const talentValCmp = entry.find("nom_talent")
     const subtypeCmp = entry.find("talent_subtype") as Component<string | null>
@@ -61,10 +57,7 @@ const setupTalentEditEntry = function(entry: Component<unknown>) {
     
 
     computed(function() {
-        log("computing" + talentVal())
-        log(talents_choices)
         const choiceList = talents_choices[talentVal()]
-        log(choiceList)
         if(choiceList !== undefined) {
             subtypeChoiceCmp.setChoices(choiceList)
             subtypeChoiceCmp.value()

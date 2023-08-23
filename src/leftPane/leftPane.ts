@@ -15,7 +15,6 @@ export const checkEncombrement = function(sheet: Sheet) {
     const encVal = signal(sheet.get("encombrement_total").value() as number)
     const encMaxCmp = sheet.get("max_encombrement")
     const encValCmp = sheet.get("encombrement_total")
-    log(encMax())
     computed(function() {
         if(encVal() > encMax()) {
             encValCmp.addClass("text-danger")
@@ -27,7 +26,7 @@ export const checkEncombrement = function(sheet: Sheet) {
             encMaxCmp.removeClass("text-danger")
         }
     }, [encMax, encVal])
-    encValCmp.on("update", function(cmp: Component<number>) {log(cmp.value()); encVal.set(cmp.value()) })
+    encValCmp.on("update", function(cmp: Component<number>) { encVal.set(cmp.value()) })
 }
 
 export const setSleepListener = function(sheet: Sheet) {

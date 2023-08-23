@@ -134,6 +134,12 @@ declare global {
         name: string
     }
 
+    type SpellData = {
+        difficulte: number,
+        bonus_ingredient: number,
+        use_ingredient: boolean
+    }
+
     type WeaponData = {
         nom_arme: string,
         groupe_arme: string,
