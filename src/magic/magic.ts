@@ -63,30 +63,56 @@ const setupMagicEditEntry = function(entry: Component) {
 
     const mainCategoryCmp = entry.find("main_category") as Component<string>
     const mainCategory = signal(mainCategoryCmp.value())
-    const subCategoryCmp = entry.find("sub_category") as ChoiceComponent
+    const subCategoryCmp = entry.find("sub_category") as ChoiceComponent<string>
     const spellCmp = entry.find("spell_choice")
     const spellDomainCmp = entry.find("spell_domain")
-    const subCategory = signal(subCategoryCmp.value() !== undefined ? subCategoryCmp.value() as string : Object.keys(magies[mainCategory()])[0])
-    const spellChoice = signal(spellCmp.value !== undefined ? spellCmp.value() : Object.keys(magies[mainCategory()][subCategory()])[0])
+
+    const subCategoryChoices = computed(function() {
+        const subCatChoices = {} as Record<string, string>
+        if(mainCategory() !== "magie_mineure") {
+            Tables.get(mainCategory()).each(function(subCat) {
+                subCatChoices[subCat.id] = subCat.long_name 
+            })
+        } else {
+            subCatChoices["magie_mineure"] = "Magie mineure"
+        }
+        subCategoryCmp.setChoices(subCatChoices)
+        return subCatChoices
+    }, [mainCategory])
+
+    const subCategorySelected = computed(function() {
+        if(subCategoryChoices()[subCategoryCmp.value()] === undefined) {
+          subCategoryCmp.value(Object.keys(magies[mainCategory()])[0])
+        }
+        return subCategoryCmp.value()
+    }, [subCategoryChoices])
+
+    const subCategoryLabel = computed(function() {
+        if(subCategorySelected() !== "magie_mineure") {
+            spellDomainCmp.value(Tables.get(mainCategory()).get(subCategorySelected()).name)
+        } else {
+            spellDomainCmp.value(Tables.get("types_magie").get(subCategorySelected()).name)
+        }
+    }, [subCategorySelected])
+
+    const spellChoice = signal(spellCmp.value !== undefined ? spellCmp.value() : Object.keys(magies[mainCategory()][subCategorySelected()])[0])
 
     mainCategoryCmp.on("update", function(cmp) {
         mainCategory.set(cmp.value())
-        subCategory.set(Object.keys(magies[mainCategory()])[0])
-        spellDomainCmp.value(Tables.get(mainCategory()).get(subCategory()).name)
-        spellChoice.set(Object.keys(magies[mainCategory()][subCategory()])[0])
+        //spellChoice.set(Object.keys(magies[mainCategory()][subCategory()])[0])
     })
 
-    subCategoryCmp.on("update", function(cmp) {
-        subCategory.set(cmp.value())
+
+    /*subCategoryCmp.on("update", function(cmp) {
         spellDomainCmp.value(Tables.get(mainCategory()).get(subCategory()).name)
         spellChoice.set(Object.keys(magies[mainCategory()][subCategory()])[0])
     })
 
     spellCmp.on("update", function(cmp) {
         spellChoice.set(cmp.value())
-    })
+    })*/
 
-    const spell = computed(function(){
+    /*const spell = computed(function(){
         const spellData = magies[mainCategory()][subCategory()][spellChoice()]
         entry.find("spell_name").value(spellData.name)
         entry.find("spell_description").value(spellData.description)
@@ -95,7 +121,7 @@ const setupMagicEditEntry = function(entry: Component) {
         entry.find("ingredient").value(spellData.ingredient)
         entry.find("bonus_ingredient").value(spellData.bonus_ingredient)
         return spellData
-    }, [spellChoice])
+    }, [spellChoice])*/
 
 }
 
