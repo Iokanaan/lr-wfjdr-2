@@ -83,6 +83,26 @@ const setupTalentEditEntry = function(entry: Component<unknown>) {
         entry.find("talent_subtype").value(cmp.value())
         talentSubtype.set(cmp.value())
     })
+
+    entry.find("display_custom_talent").on("click", function() {
+        if(entry.find("nom_talent").visible()) {
+            entry.find("nom_talent").hide()
+            entry.find("desc_talent").hide()
+            entry.find("parenthese_start").show()
+            entry.find("talent_name").show()
+            entry.find("talent_subtype").show()
+            entry.find("desc_talent_input").show()
+            entry.find("parenthese_end").show()
+        } else {
+            entry.find("nom_talent").show()
+            entry.find("desc_talent").show()
+            entry.find("talent_name").hide()
+            entry.find("parenthese_start").hide()
+            entry.find("talent_subtype").hide()
+            entry.find("desc_talent_input").hide()
+            entry.find("parenthese_end").hide()
+        }
+    })
     
 }
 
