@@ -1,7 +1,11 @@
 // Variable globale de gestion des entries sur le repeater des talents
 let entryStates: Record<string, RepeaterState> = {}
 
-export const setupRepeater2 = function(repeater: Component<any>, setupEditEntry: (entry: Component<any>) => void, setupViewEntry: (entry: Component<any>) => void) {
+export const setupRepeater = function(
+    repeater: Component<any>,
+    setupEditEntry: (entry: Component<any>) => void,
+    setupViewEntry: (entry: Component<any>) => void
+    ) {
 
     each(repeater.value(), function(_, entryId) {
         entryStates[entryId] = 'VIEW'

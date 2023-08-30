@@ -1,5 +1,5 @@
 import { rollMagic } from "../roll/rollHandler"
-import { setupRepeater2 } from "../utils/repeaters"
+import { setupRepeater } from "../utils/repeaters"
 import { computed, intToWord, signal } from "../utils/utils"
 
 const magies = {} as Record<string, Record<string, Record<string, Spell>>>
@@ -26,7 +26,7 @@ typesMagie.each(function(type: DomaineMagie) {
 
 export const setupMagicRepeater = function(sheet: Sheet) {
     const repeater = sheet.get("magic_repeater") as Component<Record<string, unknown>>
-    setupRepeater2(repeater, setupMagicEditEntry, setupMagicViewEntry(sheet))
+    setupRepeater(repeater, setupMagicEditEntry, setupMagicViewEntry(sheet))
     
 }
 

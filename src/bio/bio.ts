@@ -1,9 +1,9 @@
-import { setupRepeater2 } from "../utils/repeaters"
+import { setupRepeater } from "../utils/repeaters"
 
 export const setupCarrierRepeater = function(sheet: Sheet<CharData>) {
     const repeater = sheet.get("carrier_repeater")
     log("do")
-    setupRepeater2(repeater, function(entry: Component) { 
+    setupRepeater(repeater, function(entry: Component) { 
         log("setup_bio_repeater")
         entry.find("ancienne_carriere").on("update", function(cmp) {
             entry.find("ancienne_carriere_name").value(Tables.get("carriere").get(cmp.value()).name)
@@ -22,7 +22,7 @@ export const setupCarrierRepeater = function(sheet: Sheet<CharData>) {
 
 export const setupFolieRepeater = function(sheet: Sheet) {
     const repeater = sheet.get("folie_repeater") as Component<Record<string, unknown>>
-    setupRepeater2(repeater, function() {}, setupFolieViewEntry(sheet))
+    setupRepeater(repeater, function() {}, setupFolieViewEntry(sheet))
     
 }
 

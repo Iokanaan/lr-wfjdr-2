@@ -1,8 +1,8 @@
-import { setupRepeater2 } from "../utils/repeaters"
+import { setupRepeater } from "../utils/repeaters"
 
 export const setupArmorRepeater = function(sheet: Sheet<unknown>) {
     const repeater = sheet.get("armor_repeater") as Component<Record<string, ArmorData>>
-    setupRepeater2(repeater, setupArmorEditEntry, function() {})
+    setupRepeater(repeater, setupArmorEditEntry, function() {})
     repeater.on('click', function(rep: Component<Record<string, ArmorData>>) {
         wait(100, function() {
            setArmorSchema(sheet, rep)

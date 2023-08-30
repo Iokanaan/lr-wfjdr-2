@@ -1,10 +1,10 @@
 import { UpdateBuilder } from "firebase-functions/v1/remoteConfig"
-import { setupRepeater2 } from "../utils/repeaters"
+import { setupRepeater } from "../utils/repeaters"
 import { computed, signal } from "../utils/utils"
 
 export const setupTalentRepeater = function(sheet: Sheet<unknown>) {
     const repeater = sheet.get("talent_repeater") as Component<Record<string, unknown>>
-    setupRepeater2(repeater, setupTalentEditEntry, setupTalentViewEntry)
+    setupRepeater(repeater, setupTalentEditEntry, setupTalentViewEntry)
     
     repeater.on("click", "talent_display", function(cmp: Component) {
         const entry = repeater.find(cmp.index())
@@ -18,7 +18,6 @@ export const setupTalentRepeater = function(sheet: Sheet<unknown>) {
 }
 
 const setupTalentViewEntry = function(entry: Component) {
-    log(entry.value())
     Bindings.add(entry.value().talent_name, "bind_talent", "TalentDisplay", function() {
         return {
             "talent_name": entry.value().talent_name,

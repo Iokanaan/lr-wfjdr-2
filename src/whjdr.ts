@@ -7,7 +7,7 @@ import { rollResultHandler } from "./roll/rollHandler";
 import { setupBasicSkill, setupSkillEditEntry, setupSkillViewEntry } from "./skills/skills";
 import { setBStatListener, setBonuses, setStatListeners } from "./stats/stats";
 import { hideTalentDescription, setupTalentRepeater } from "./talent/talent";
-import { setupRepeater2 } from "./utils/repeaters";
+import { setupRepeater } from "./utils/repeaters";
 import { setArmeImpro, setMunitionListener, setPugilat } from "./weapons/weaponBasics";
 import { setupWeaponRepeater } from "./weapons/weaponRepeater";
 
@@ -64,10 +64,9 @@ init = function(sheet: Sheet<any>) {
             Tables.get("skills_basic").each(function(skill) {
                 setupBasicSkill(sheet, skill)
             })
-            setupRepeater2(sheet.get("skill_repeater"), setupSkillEditEntry, setupSkillViewEntry)
+            setupRepeater(sheet.get("skill_repeater"), setupSkillEditEntry, setupSkillViewEntry)
         } catch(e) {
             log("Error initializing skills")
-            log(e.message)
         }
 
         try {
@@ -80,7 +79,7 @@ init = function(sheet: Sheet<any>) {
             log("Error initializing talents")
         }
 
-        //try {
+        try {
             // Armes
             if(sheet.get("munition_quality").value() === null) {
                 sheet.get("munition_quality").value("Moyenne")
@@ -90,9 +89,9 @@ init = function(sheet: Sheet<any>) {
             setArmeImpro(sheet, "CC")
             setArmeImpro(sheet, "CT")
             setMunitionListener(sheet)           
-        /*} catch(e) {
+        } catch(e) {
             log("Error initializing weapons")
-        }*/
+        }
 
         try {
             // Armure
@@ -128,7 +127,6 @@ init = function(sheet: Sheet<any>) {
 
         // Bio
         try {
-            log("setup repeater")
             setupCarrierRepeater(sheet)
             setupFolieRepeater(sheet)
         } catch(e) {

@@ -1,10 +1,10 @@
 import { signals } from "../globals"
 import { roll } from "../roll/rollHandler"
-import { setupRepeater2 } from "../utils/repeaters"
+import { setupRepeater } from "../utils/repeaters"
 import { computed, intToWord } from "../utils/utils"
 
 export const setupWeaponRepeater = function(sheet: Sheet) {
-    setupRepeater2(sheet.get("weapons_repeater"), setupWeaponEditEntry, setupWeaponViewEntry)
+    setupRepeater(sheet.get("weapons_repeater"), setupWeaponEditEntry, setupWeaponViewEntry)
 }
 
 export const setupWeaponViewEntry = function(entry: Component<WeaponData>) {
