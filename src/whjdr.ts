@@ -1,7 +1,6 @@
 import { setupArmorRepeater, setArmorSchema } from "./armor/armorRepeater";
-import { setupCarrierRepeater } from "./bio/bio";
+import { setupCarrierRepeater, setupFolieRepeater } from "./bio/bio";
 import { globalSheets } from "./globals";
-import { switchCarrier } from "./help/carriers";
 import { checkEncombrement, setBlessuresListener, setClassEditor, setInitiativeListener, setMaxEncombrement, setRaceEditor, setSleepListener } from "./leftPane/leftPane";
 import { hideMagicDescription, setupMagicRepeater } from "./magic/magic";
 import { rollResultHandler } from "./roll/rollHandler";
@@ -16,19 +15,20 @@ import { setupWeaponRepeater } from "./weapons/weaponRepeater";
  * TODO
  * Magie
  * Monstres
- * Weapon / object / armor crafter
  * Encombrement calcul
  * bindings
  * drop dice
  */
 
 /*
-MAJ FORCE
-Revoir les compétences
-initialisation de la magie
+rituels
+rune
+drop dice
+encombrement
+talents application
+
 Icones bizarre
-stat avancée écrase la compétence
-Bonus de force pour les dégats
+
 */
 
 
@@ -103,6 +103,7 @@ init = function(sheet: Sheet<any>) {
             log("Error initializing armors")
         }
 
+        try {
             // Volet gauche
             setMaxEncombrement(sheet)
             checkEncombrement(sheet)
@@ -111,13 +112,13 @@ init = function(sheet: Sheet<any>) {
             setClassEditor(sheet)
             setInitiativeListener(sheet)
             setBlessuresListener(sheet)
-
+        } catch(e) {
+            log("Error intializing left pane")
+        }
 
         try {
             //Magie
             setupMagicRepeater(sheet)
-            log("magic repeater")
-            log((sheet.get("magic_repeater") as Component<Record<string, Spell>>).value())
             each((sheet.get("magic_repeater") as Component<Record<string, Spell>>).value(), function(_, entryId) {
                 hideMagicDescription(sheet.get("magic_repeater").find(entryId))
             })
@@ -127,7 +128,9 @@ init = function(sheet: Sheet<any>) {
 
         // Bio
         try {
+            log("setup repeater")
             setupCarrierRepeater(sheet)
+            setupFolieRepeater(sheet)
         } catch(e) {
             log("Error initializing bio")
         }

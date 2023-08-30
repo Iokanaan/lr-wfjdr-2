@@ -53,10 +53,16 @@ export const setupSkillEditEntry = function(entry: Component) {
   computed(function() {
     if(skill().variable === "true") {
       entry.find("specialite").show()
+      return true
     } else {
       entry.find("specialite").hide()
       entry.find("specialite").value(null)
+      return false
     }
+  }, [skill])
+
+  computed(function() {
+    entry.find("nom_comp_label").value(skill().name)
   }, [skill])
 
   entry.find("nom_comp").on("update", function(cmp: Component<string>) {
@@ -66,6 +72,25 @@ export const setupSkillEditEntry = function(entry: Component) {
   entry.find("custom_stat_comp").on("update", function(cmp: Component<string>) {
     customStat.set(cmp.value())
   })
+
+  entry.find("display_custom").on("click", function() {
+    if(entry.find("nom_comp").visible()) {
+      entry.find("nom_comp").hide()
+      entry.find("nom_comp_label").show()
+      entry.find("specialite").show()
+      entry.find('fixed_stat').hide()
+      entry.find("custom_stat_comp").show()
+    } else {
+      entry.find("nom_comp").value(Tables.get("competences_av").get("alphabet_secret").id)
+      skill.set(Tables.get("competences_av").get("alphabet_secret"))
+      entry.find("nom_comp").show()
+      entry.find("nom_comp_label").hide()
+      entry.find("specialite").show()
+      entry.find('fixed_stat').show()
+      entry.find("custom_stat_comp").hide()
+    }
+  })
+
 
 }
 

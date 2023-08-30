@@ -12,7 +12,7 @@ export const setupWeaponViewEntry = function(entry: Component<WeaponData>) {
     sanitizeData(entry)
 
     const damageBonus = computed(function() {
-        return entry.value().bonus_bf ? entry.value().degats : entry.value().degats + (signals["BF"]())
+        return entry.value().bonus_bf ? entry.value().degats + (signals["BF"]()) : entry.value().degats
     }, [signals["BF"]])
     entry.find("weapon_name").on("click", function(cmp: Component) {
         const targetStat = entry.value().type_arme === "1" ? "CC" : "CT"
@@ -33,6 +33,24 @@ export const setupWeaponViewEntry = function(entry: Component<WeaponData>) {
 
         roll(entry.sheet(), cmp.text(), target, ["attack, damage_" + intToWord(damageBonus())])
     })
+    Bindings.add(entry.value().nom_arme, "bind_weapon", "WeaponDisplay", function() {
+        return {
+            "nom_arme": entry.value().nom_arme,
+            "groupe_arme": entry.value().groupe_arme,
+            "type_arme_as_int": entry.value().type_arme_as_int, 
+            "portee_courte": entry.value().portee_courte, 
+            "portee_longue": entry.value().portee_longue,
+            "bonus_bf_as_int": entry.value().bonus_bf_as_int,
+            "degats": entry.value().degats,
+            "attributs": entry.value().attributs,
+            "qualite": entry.value().qualite,
+            "notes": entry.value().notes
+        } 
+    })
+    entry.find("bind_weapon").on("click", function() {
+        Bindings.send(entry.sheet(), entry.value().nom_arme)
+    })
+
 }
 
 export const setupWeaponEditEntry = function(entry: Component<WeaponData>) {

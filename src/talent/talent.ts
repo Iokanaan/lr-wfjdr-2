@@ -1,11 +1,12 @@
-import { setupRepeater, setupRepeater2 } from "../utils/repeaters"
+import { UpdateBuilder } from "firebase-functions/v1/remoteConfig"
+import { setupRepeater2 } from "../utils/repeaters"
 import { computed, signal } from "../utils/utils"
 
 export const setupTalentRepeater = function(sheet: Sheet<unknown>) {
     const repeater = sheet.get("talent_repeater") as Component<Record<string, unknown>>
-    setupRepeater2(repeater, setupTalentEditEntry, function() {})
+    setupRepeater2(repeater, setupTalentEditEntry, setupTalentViewEntry)
     
-    repeater.on("click", "talent_display", function(cmp: Component<unknown>) {
+    repeater.on("click", "talent_display", function(cmp: Component) {
         const entry = repeater.find(cmp.index())
         const desc = entry.find("talent_desc_col")
         if(desc.visible()) {
@@ -13,6 +14,20 @@ export const setupTalentRepeater = function(sheet: Sheet<unknown>) {
         } else {
             desc.show()
         }
+    })
+}
+
+const setupTalentViewEntry = function(entry: Component) {
+    log(entry.value())
+    Bindings.add(entry.value().talent_name, "bind_talent", "TalentDisplay", function() {
+        return {
+            "talent_name": entry.value().talent_name,
+            "talent_subtype": entry.value().talent_subtype,
+            "desc_talent_input": entry.value().desc_talent_input
+        } 
+    })
+    entry.find("bind_talent").on("click", function() {
+        Bindings.send(entry.sheet(), entry.value().talent_name)
     })
 }
 
@@ -64,10 +79,12 @@ const setupTalentEditEntry = function(entry: Component<unknown>) {
             subtypeCmp.value(talentSubtype())
             subtypeChoiceCmp.show()
         } else {
-            subtypeChoiceCmp.setChoices({})
-            subtypeChoiceCmp.value(null)
-            subtypeCmp.value(null)
-            subtypeChoiceCmp.hide()
+            if(subtypeChoiceCmp.value() !== null) {
+                subtypeChoiceCmp.setChoices({})
+                subtypeChoiceCmp.value(null)
+                subtypeCmp.value(null)
+                subtypeChoiceCmp.hide()
+            }
         }
     }, [talentVal, talentSubtype])
     
@@ -82,26 +99,6 @@ const setupTalentEditEntry = function(entry: Component<unknown>) {
     subtypeChoiceCmp.on("update", function(cmp: Component<string>) {
         entry.find("talent_subtype").value(cmp.value())
         talentSubtype.set(cmp.value())
-    })
-
-    entry.find("display_custom_talent").on("click", function() {
-        if(entry.find("nom_talent").visible()) {
-            entry.find("nom_talent").hide()
-            entry.find("desc_talent").hide()
-            entry.find("parenthese_start").show()
-            entry.find("talent_name").show()
-            entry.find("talent_subtype").show()
-            entry.find("desc_talent_input").show()
-            entry.find("parenthese_end").show()
-        } else {
-            entry.find("nom_talent").show()
-            entry.find("desc_talent").show()
-            entry.find("talent_name").hide()
-            entry.find("parenthese_start").hide()
-            entry.find("talent_subtype").hide()
-            entry.find("desc_talent_input").hide()
-            entry.find("parenthese_end").hide()
-        }
     })
     
 }

@@ -193,16 +193,22 @@ const handleSpell = function(sheet: Sheet<unknown>, result: DiceResult, rollTags
         total += result.all[i].value
     }
     sheet.get("result_label").text(total.toString())
-    if(rollTags.target !== undefined) {
-        sheet.get("result_subtext").text(total >= rollTags.target ? "Réussi de " + (total - rollTags.target).toString() : "Échoué de " + (rollTags.target - total).toString())
-    }
     const nbDicesByValue: Record<string, number>= { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0, "9": 0, "10": 0 }
+    let fumble = true
     for(let i=0; i<result.all.length; i++) {
         nbDicesByValue[result.all[i].value]++
+        fumble = fumble && result.all[i].value === 1
+    }
+    if(fumble) {
+        sheet.get("result_subtext_danger").text("Échec critique")
+    } else {
+        if(rollTags.target !== undefined) {
+            sheet.get("result_subtext").text(total >= rollTags.target ? "Réussi de " + (total - rollTags.target).toString() : "Échoué de " + (rollTags.target - total).toString())
+        }
     }
     each(nbDicesByValue, function(val) {
         if(val > 1) {
-            sheet.get("result_subtext_danger").text("Écho du Chaos")
+            sheet.get("result_subtext_danger_2").text("Écho du Chaos")
             return
         }
     })
