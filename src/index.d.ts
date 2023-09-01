@@ -130,6 +130,7 @@ declare global {
     interface LrObject<T> {
         each(f:(a: T) => void);
         get(s: string): T;
+        random(callback: (val: T) => void)
     }
 
     interface LrEvent<T> {

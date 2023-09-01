@@ -2,19 +2,26 @@ import { signals } from "../globals"
 import { switchCarrier } from "../help/carriers"
 import { computed, signal } from "../utils/utils"
 
+// Calcul de l'encombrement max en fonction de la force
 export const setMaxEncombrement = function(sheet: Sheet) {
-    const maxEncLabel = sheet.get("max_encombrement")
-    signals["enc_max"] = computed(function() {
-        maxEncLabel.text(" / " + (signals['F']() * 10).toString())
-        return signals['F']() * 10
-    }, [signals['F']])
+
 }
 
 export const checkEncombrement = function(sheet: Sheet) {
-    const encMax = signals["enc_max"]
-    const encVal = signal(sheet.get("encombrement_total").value() as number)
+    
     const encMaxCmp = sheet.get("max_encombrement")
     const encValCmp = sheet.get("encombrement_total")
+
+    // Création d'un signal pour l'encombrement actuel
+    const encVal = signal(sheet.get("encombrement_total").value() as number)
+    
+    // Calcul de l'encombrement max en fonction de la force
+    const encMax = computed(function() {
+        sheet.get("max_encombrement").text(" / " + (signals['F']() * 10).toString())
+        return signals['F']() * 10
+    }, [signals['F']])
+
+    // Adaptation des couleurs en fonction de l'encombrement
     computed(function() {
         if(encVal() > encMax()) {
             encValCmp.addClass("text-danger")
@@ -30,40 +37,38 @@ export const checkEncombrement = function(sheet: Sheet) {
 }
 
 export const setSleepListener = function(sheet: Sheet) {
+    // Click sur le bouton sommeil
     sheet.get("sleep").on("click", function() {
+
+        // On donne un PV si le personnage n'est pas gravement blessé
         const bActuel = signals['B_actuel']
         if(bActuel() > 3 && bActuel() <  (signals['B']() as number)) {
             bActuel.set(bActuel() + 1)
             sheet.get("B_actuel").value(bActuel())
         }
+
+        // On restaure les points de fortune
         sheet.get("fortune_actuel").value(sheet.get("PD").value())
     })
 }
 
 export const setRaceEditor = function(sheet: Sheet) {
+
     const raceCmp = sheet.get("race")
     const raceTextCmp = sheet.get("race_txt")
     const raceLabelCmp = sheet.get("race_label")
-    const customRaceCmp = sheet.get("custom_race")
-    const race = signal(raceCmp.value() as string)
-    
-    computed(function() {
-        raceCmp.hide()
-        customRaceCmp.hide()
-        raceTextCmp.text(race())
-        raceTextCmp.show()
-    }, [race])
+    const customRaceCmp = sheet.get("custom_race") as Component<string>
 
     // Mode liste déroulante
     raceTextCmp.on("click", function() {
         raceTextCmp.hide()
         raceCmp.show()
     })
+
+    // Au changement dans la liste déroulante, on mets à jour l'input sous-jacent
     raceCmp.on("update", function(cmp: Component<string>) {
         const raceObj = Tables.get("races").get(cmp.value())
-        if(raceObj !== null) {
-            race.set(Tables.get("races").get(cmp.value()).name)
-        }
+        customRaceCmp.value(raceObj.name)
     })
 
     // Mode custom 
@@ -72,44 +77,44 @@ export const setRaceEditor = function(sheet: Sheet) {
         raceCmp.hide()
         customRaceCmp.show()
     })
+
+    // À l'update de l'input on remet le mode textuel
     customRaceCmp.on("update", function(cmp: Component<string>) {
-        race.set(cmp.value())
+        raceCmp.hide()
+        customRaceCmp.hide()
+        raceTextCmp.text(cmp.value())
+        raceTextCmp.show()
     })
+
+    
+    // Race random par défaut
+    if(customRaceCmp.value() !== undefined) {
+        raceTextCmp.text(customRaceCmp.value())
+    } else {
+        Tables.get("races").random(function(race) {
+            customRaceCmp.value(race.name)
+        })
+    }
 }
 
-
-
-
 export const setClassEditor = function(sheet: Sheet) {
+
     const classCmp = sheet.get("class")
     const classTextCmp = sheet.get("class_txt")
     const classLabelCmp = sheet.get("class_label")
-    const customClassCmp = sheet.get("custom_class")
-    const classSignal = signal(classCmp.value() as string)
-    
-    computed(function() {
-        classCmp.hide()
-        customClassCmp.hide()
-        const classObj = Tables.get("carriere").get(classSignal())
-        if(classObj !== null) {
-            switchCarrier(sheet, classSignal())
-            classTextCmp.text(classObj.name)
-        } else {
-            classTextCmp.text(classSignal())
-        } 
-        classTextCmp.show()
-    }, [classSignal])
+    const customClassCmp = sheet.get("custom_class") as Component<string>
 
     // Mode liste déroulante
     classTextCmp.on("click", function() {
         classTextCmp.hide()
         classCmp.show()
     })
+
+    // Au changement dans la liste déroulante, on mets à jour l'input sous-jacent
     classCmp.on("update", function(cmp: Component<string>) {
-        const raceObj = Tables.get("carriere").get(cmp.value())
-        if(raceObj !== null) {
-            classSignal.set(Tables.get("carriere").get(cmp.value()).name)
-        }
+        const newCarrier = Tables.get("carriere").get(cmp.value())
+        customClassCmp.value(newCarrier.name)
+        switchCarrier(sheet, newCarrier)
     })
 
     // Mode custom 
@@ -118,15 +123,30 @@ export const setClassEditor = function(sheet: Sheet) {
         classCmp.hide()
         customClassCmp.show()
     })
+
+    // À l'update de l'input on remet le mode textuel
     customClassCmp.on("update", function(cmp: Component<string>) {
-        classSignal.set(cmp.value())
+        classCmp.hide()
+        customClassCmp.hide()
+        classTextCmp.text(cmp.value())
+        classTextCmp.show()
     })
+
+    // Carrière random par défaut
+    if(customClassCmp.value() !== undefined) {
+        classTextCmp.text(customClassCmp.value())
+    } else {
+        Tables.get("carriere").random(function(carriere) {
+            customClassCmp.value(carriere.name)
+        })
+    }
 }
 
+// Initiative
 export const setInitiativeListener = function(sheet: Sheet<CharData>) {
     sheet.get("init_roll").on("click", function() {
         const builder = new RollBuilder(sheet)
-        builder.expression("(1d10 + " + signals['Ag']() + ")[initiative]")
+        builder.expression("(1d10 + " + sheet.get("Ag").value() + ")[initiative]")
         builder.title("Initiative")
         builder.roll()
     })
@@ -134,21 +154,32 @@ export const setInitiativeListener = function(sheet: Sheet<CharData>) {
 
 
 export const setBlessuresListener = function(sheet: Sheet<CharData>) {
+
     const bActuelCmp = sheet.get("B_actuel")
     const bMaxCmp = sheet.get("b_max")
-    signals["B_actuel"] = signal(sheet.get("B_actuel").value() as number)
+
+    // Signal des blessures actuelles
+    const bActuel = signal(sheet.get("B_actuel").value() as number)
+
+    // Adaptation de la couleur en fonction des blessures
     computed(function() {
-        if(signals["B_actuel"]() as number <= 3) {
+        // Si blessures <= 3 affichage du texte en rouge
+        if(bActuel() <= 3) {
             bActuelCmp.addClass("text-danger")
             bActuelCmp.removeClass("text-light")
             bMaxCmp.addClass("text-danger")
             bMaxCmp.removeClass("text-light")
+        // Sinon blanc
         } else {
             bActuelCmp.removeClass("text-danger")
             bActuelCmp.addClass("text-light")
             bMaxCmp.removeClass("text-danger")
             bMaxCmp.addClass("text-light")
         }
-    }, [signals["B_actuel"]])
-    bActuelCmp.on("update", function(cmp: Component) { signals["B_actuel"].set(cmp.value()) })
+    }, [bActuel])
+
+    // Mise à jour du signal à l'update de l'input
+    bActuelCmp.on("update", function(cmp: Component) { 
+        bActuel.set(cmp.value()) 
+    })
 }

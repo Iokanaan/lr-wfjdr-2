@@ -1,24 +1,27 @@
-import { setupArmorRepeater, setArmorSchema } from "./armor/armorRepeater";
-import { setupCarrierRepeater, setupFolieRepeater } from "./bio/bio";
+import { setupArmorRepeater, setArmorSchema } from "./combat/armorRepeater";
+import { setupCarrierEditEntry, setupFolieViewEntry } from "./bio/bio";
 import { globalSheets } from "./globals";
+import { setCarrierInfoListener } from "./help/carriers";
 import { checkEncombrement, setBlessuresListener, setClassEditor, setInitiativeListener, setMaxEncombrement, setRaceEditor, setSleepListener } from "./leftPane/leftPane";
-import { hideDescription, setupMagicRepeater } from "./magic/magic";
-import { setupRuneRepeaters } from "./magic/runes";
+import { setupMagicEditEntry, setupMagicViewEntry } from "./magic/magic";
+import { setupRituelViewEntry } from "./magic/rituels";
+import { setupRuneEditEntry, setupRuneViewEntry } from "./magic/runes";
 import { rollResultHandler } from "./roll/rollHandler";
 import { setupBasicSkill, setupSkillEditEntry, setupSkillViewEntry } from "./skills/skills";
 import { setBStatListener, setBonuses, setStatListeners } from "./stats/stats";
-import { hideTalentDescription, setupTalentRepeater } from "./talent/talent";
-import { setupRepeater } from "./utils/repeaters";
-import { setArmeImpro, setMunitionListener, setPugilat } from "./weapons/weaponBasics";
-import { setupWeaponRepeater } from "./weapons/weaponRepeater";
+import { setupTalentEditEntry, setupTalentViewEntry } from "./talent/talent";
+import { cleanupRepeater, setupRepeater } from "./utils/repeaters";
+import { hideDescriptions } from "./utils/utils";
+import { setArmeImpro, setMunitionListener, setPugilat } from "./combat/weaponBasics";
+import { setupWeaponEditEntry, setupWeaponViewEntry } from "./combat/weaponRepeater";
 
 
 /*
-rituels
 encombrement
 talents application
 Icones bizarre
-bug drop craft
+drop armes dégats
+revue armure
 */
 
 
@@ -61,10 +64,9 @@ init = function(sheet: Sheet<any>) {
 
         try {
             // Talents
-            setupTalentRepeater(sheet)
-            each((sheet.get("talent_repeater") as Component<Record<string, Talent>>).value(), function(_, entryId) {
-                hideTalentDescription(sheet.get("talent_repeater").find(entryId))
-            })
+            setupRepeater(sheet.get("talent_repeater"), setupTalentEditEntry, setupTalentViewEntry)
+            hideDescriptions(sheet.get("talent_repeater") as Component<Record<string, unknown>>, "talent_desc_col")
+        
         } catch(e) {
             log("Error initializing talents")
         }
@@ -74,7 +76,7 @@ init = function(sheet: Sheet<any>) {
             if(sheet.get("munition_quality").value() === null) {
                 sheet.get("munition_quality").value("Moyenne")
             }
-            setupWeaponRepeater(sheet)
+            setupRepeater(sheet.get("weapons_repeater"), setupWeaponEditEntry, setupWeaponViewEntry)
             setPugilat(sheet)
             setArmeImpro(sheet, "CC")
             setArmeImpro(sheet, "CT")
@@ -107,27 +109,30 @@ init = function(sheet: Sheet<any>) {
 
         try {
             //Magie
-            setupMagicRepeater(sheet)
-            each((sheet.get("magic_repeater") as Component<Record<string, Spell>>).value(), function(_, entryId) {
-                hideDescription(sheet.get("magic_repeater").find(entryId), "magic_desc_col")
-            })
-            setupRuneRepeaters(sheet)
-            each((sheet.get("rune_repeater") as Component<Record<string, unknown>>).value(), function(_, entryId) {
-                hideDescription(sheet.get("rune_repeater").find(entryId), "desc_col")
-            })
-            each((sheet.get("rune_majeur_repeater") as Component<Record<string, unknown>>).value(), function(_, entryId) {
-                hideDescription(sheet.get("rune_majeur_repeater").find(entryId), "desc_col")
-            })
+            setupRepeater(sheet.get("magic_repeater"), setupMagicEditEntry, setupMagicViewEntry)
+            hideDescriptions(sheet.get("magic_repeater") as Component<Record<string, unknown>> , "magic_desc_col")
+            setupRepeater(sheet.get("rune_repeater"), setupRuneEditEntry("runes"), setupRuneViewEntry)
+            setupRepeater(sheet.get("rune_majeur_repeater"), setupRuneEditEntry("runes_majeures"), setupRuneViewEntry)
+            hideDescriptions(sheet.get("rune_repeater") as Component<Record<string, unknown>>, "desc_col")
+            hideDescriptions(sheet.get("rune_majeur_repeater") as Component<Record<string, unknown>>, "desc_col")
+            setupRepeater(sheet.get("rituel_repeater") , null, setupRituelViewEntry)
         } catch(e) {
             log("Error initializing magic")
         }
 
         // Bio
         try {
-            setupCarrierRepeater(sheet)
-            setupFolieRepeater(sheet)
+            setupRepeater(sheet.get("carrier_repeater"), setupCarrierEditEntry, null)
+            setupRepeater(sheet.get("folie_repeater"), null, setupFolieViewEntry)
+            hideDescriptions(sheet.get("folie_repeater") as Component<Record<string, unknown>>, "folie_desc_col")
         } catch(e) {
             log("Error initializing bio")
+        }
+
+        try {
+            setCarrierInfoListener(sheet)
+        } catch(e) {
+            log("Error initializing help")
         }
 
         log("Initialization of sheet complete")
@@ -157,6 +162,9 @@ init = function(sheet: Sheet<any>) {
         }
         if((sheet.get("attributs") as ChoiceComponent<string[]>).value().length === 0) {
             sheet.get("attributs").value([])
+        }
+        if(sheet.get("degats").value() === undefined) {
+            sheet.get("degats").value(0)
         }
         if(sheet.get("bonus_bf").value() === false) {
             sheet.get("bonus_bf").value(false)
@@ -200,12 +208,19 @@ getCriticalHits = function(result: DiceResult) {
 
 drop = function(from, to) {
     if (from.id() === "ItemCraft" && to.id() === "main") {
+        cleanupRepeater(to.get("item_repeater") as Component<Record<string, unknown>>)
         return "item_repeater"; 
     }
     if (from.id() === "WeaponCraft" && to.id() === "main") {
+        cleanupRepeater(to.get("weapons_repeater") as Component<Record<string, unknown>>)
         return "weapons_repeater"
     }
     if (from.id() === "ArmorCraft" && to.id() === "main") {
+        cleanupRepeater(to.get("armor_repeater") as Component<Record<string, unknown>>)
         return "armor_repeater"
+    }
+    if (from.id() === "RituelCraft" && to.id() === "main") {
+        cleanupRepeater(to.get("rituel_repeater") as Component<Record<string, unknown>>)
+        return "rituel_repeater"
     }
 }

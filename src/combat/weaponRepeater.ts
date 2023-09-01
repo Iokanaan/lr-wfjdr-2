@@ -3,10 +3,6 @@ import { roll } from "../roll/rollHandler"
 import { setupRepeater } from "../utils/repeaters"
 import { computed, intToWord } from "../utils/utils"
 
-export const setupWeaponRepeater = function(sheet: Sheet) {
-    setupRepeater(sheet.get("weapons_repeater"), setupWeaponEditEntry, setupWeaponViewEntry)
-}
-
 export const setupWeaponViewEntry = function(entry: Component<WeaponData>) {
 
     sanitizeData(entry)
@@ -34,18 +30,7 @@ export const setupWeaponViewEntry = function(entry: Component<WeaponData>) {
         roll(entry.sheet(), cmp.text(), target, ["attack, damage_" + intToWord(damageBonus())])
     })
     Bindings.add(entry.value().nom_arme, "bind_weapon", "WeaponDisplay", function() {
-        return {
-            "nom_arme": entry.value().nom_arme,
-            "groupe_arme": entry.value().groupe_arme,
-            "type_arme_as_int": entry.value().type_arme_as_int, 
-            "portee_courte": entry.value().portee_courte, 
-            "portee_longue": entry.value().portee_longue,
-            "bonus_bf_as_int": entry.value().bonus_bf_as_int,
-            "degats": entry.value().degats,
-            "attributs": entry.value().attributs,
-            "qualite": entry.value().qualite,
-            "notes": entry.value().notes
-        } 
+        return entry.value()
     })
     entry.find("bind_weapon").on("click", function() {
         Bindings.send(entry.sheet(), entry.value().nom_arme)

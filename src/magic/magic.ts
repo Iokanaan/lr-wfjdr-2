@@ -21,64 +21,57 @@ typesMagie.each(function(type: DomaineMagie) {
     }
 })
 
-export const setupMagicRepeater = function(sheet: Sheet) {
-    const repeater = sheet.get("magic_repeater") as Component<Record<string, unknown>>
-    setupRepeater(repeater, setupMagicEditEntry, setupMagicViewEntry(sheet))
+export const setupMagicViewEntry = function(entry: Component) {
+
+    // Lancement du sort au click sur son nom
+    entry.find("spell_label").on("click", function(component: Component<unknown>) {
+        
+        // Définition de la difficulté, avec un ajustement si ingrédient
+        let target = entry.value().difficulte
+        if(entry.find("use_ingredient").value() === true) {
+            target -= entry.value().bonus_ingredient
+        }
+
+        // Reprise du nombre de dés à lancer
+        let castLevel = entry.sheet().get("cast_level").value() as number
+        if(castLevel === null) {
+            castLevel = parseInt(entry.sheet().get("Mag").text()) as number
+        }
+
+        // Lancer des dés
+        rollMagic(entry.sheet(), component.text(), castLevel, target, [])
+    })
     
+    // Affichage de la description du sort au click sur le livre
+    entry.find("magic_display").on("click", function(cmp: Component<unknown>) {
+        const desc = entry.find("magic_desc_col")
+        if(desc.visible()) {
+            desc.hide()
+        } else {
+            desc.show()
+        }
+    })
+
+    // Gestion du Binding
+    Bindings.add(entry.value().spell_name, "bind_spell", "MagieDisplay", function() {
+        return entry.value()
+    })
+    entry.find("bind_spell").on("click", function() {
+        Bindings.send(entry.sheet(), entry.value().spell_name)
+    })
 }
 
-const setupMagicViewEntry = function(sheet: Sheet) {
-    return function(entry: Component) {
 
-        entry.find("spell_label").on("click", function(component: Component<unknown>) {
-            const data = (sheet.get("magic_repeater").value() as Record<string, SpellKnown>)[component.index()]
-            let target = data.difficulte
-            if(entry.find("use_ingredient").value() === true) {
-                target -= data.bonus_ingredient
-            }
-            let castLevel = sheet.get("cast_level").value() as number
-            if(castLevel === null) {
-                castLevel = parseInt(sheet.get("Mag").text()) as number
-            }
-            rollMagic(sheet, component.text(), castLevel, target, [])
-        })
-    
-        entry.find("magic_display").on("click", function(cmp: Component<unknown>) {
-            const desc = entry.find("magic_desc_col")
-            if(desc.visible()) {
-                desc.hide()
-            } else {
-                desc.show()
-            }
-        })
-
-        Bindings.add(entry.value().spell_name, "bind_spell", "MagieDisplay", function() {
-            return { 
-                "spell_name": entry.value().spell_name,
-                "spell_domain": entry.value().spell_domain,
-                "incantation": entry.value().incantation,
-                "difficulte": entry.value().difficulte,
-                "ingredient": entry.value().ingredient,
-                "bonus_ingredient": entry.value().bonus_ingredient,
-                "spell_description": entry.value().spell_description
-            }
-        })
-
-        entry.find("bind_spell").on("click", function() {
-            Bindings.send(entry.sheet(), entry.value().spell_name)
-        })
-    }
-
-}
-
-const setupMagicEditEntry = function(entry: Component) {
+export const setupMagicEditEntry = function(entry: Component) {
 
     const mainCategoryCmp = entry.find("main_category") as Component<string>
-    const mainCategory = signal(mainCategoryCmp.value())
     const subCategoryCmp = entry.find("sub_category") as ChoiceComponent<string>
     const spellCmp = entry.find("spell_choice") as ChoiceComponent<string>
     const spellDomainCmp = entry.find("spell_domain")
 
+    const mainCategory = signal(mainCategoryCmp.value())
+
+    // Transition en mode sort personnalisé au click sur les outils
     entry.find("display_custom").on("click", function() {
         const predefRow = entry.find("predef_row")
         const customRow = entry.find("custom_row")
@@ -91,7 +84,7 @@ const setupMagicEditEntry = function(entry: Component) {
         }
     })
 
-
+    // Calcul et set les sous-catégories en fonction de la catégorie principale
     const subCategoryChoices = computed(function() {
         const subCatChoices = {} as Record<string, string>
         if(mainCategory() !== "magie_mineure") {
@@ -169,8 +162,4 @@ const setupMagicEditEntry = function(entry: Component) {
         return spellData
     }, [spellSelected])
 
-}
-
-export const hideDescription = function(entry: Component<unknown>, descId: string) {
-    entry.find(descId).hide()
 }

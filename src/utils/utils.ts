@@ -77,3 +77,9 @@ export function computed<T>(compute: () => T, dependencies: Signal<unknown>[] | 
 
     return s;
 }
+
+export const hideDescriptions = function(repeater: Component<Record<string, unknown>>, descId: string) {
+    each(repeater.value(), function(_, entryId) {
+        repeater.find(entryId).hide()
+    })
+}

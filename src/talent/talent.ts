@@ -2,12 +2,9 @@ import { UpdateBuilder } from "firebase-functions/v1/remoteConfig"
 import { setupRepeater } from "../utils/repeaters"
 import { computed, signal } from "../utils/utils"
 
-export const setupTalentRepeater = function(sheet: Sheet<unknown>) {
-    const repeater = sheet.get("talent_repeater") as Component<Record<string, unknown>>
-    setupRepeater(repeater, setupTalentEditEntry, setupTalentViewEntry)
+export const setupTalentViewEntry = function(entry: Component) {
     
-    repeater.on("click", "talent_display", function(cmp: Component) {
-        const entry = repeater.find(cmp.index())
+    entry.find("talent_display").on("click", function(cmp: Component) {
         const desc = entry.find("talent_desc_col")
         if(desc.visible()) {
             desc.hide()
@@ -15,22 +12,16 @@ export const setupTalentRepeater = function(sheet: Sheet<unknown>) {
             desc.show()
         }
     })
-}
-
-const setupTalentViewEntry = function(entry: Component) {
+    
     Bindings.add(entry.value().talent_name, "bind_talent", "TalentDisplay", function() {
-        return {
-            "talent_name": entry.value().talent_name,
-            "talent_subtype": entry.value().talent_subtype,
-            "desc_talent_input": entry.value().desc_talent_input
-        } 
+        return entry.value()
     })
     entry.find("bind_talent").on("click", function() {
         Bindings.send(entry.sheet(), entry.value().talent_name)
     })
 }
 
-const setupTalentEditEntry = function(entry: Component<unknown>) {
+export const setupTalentEditEntry = function(entry: Component<unknown>) {
     entry.find("desc_talent").text(Tables.get("talents").get((entry.find("nom_talent") as Component<string>).value()).description)
     entry.find("desc_talent_input").value(Tables.get("talents").get((entry.find("nom_talent") as Component<string>).value()).description)
     entry.find("talent_name").value(Tables.get("talents").get((entry.find("nom_talent") as Component<string>).value()).name)
@@ -100,8 +91,4 @@ const setupTalentEditEntry = function(entry: Component<unknown>) {
         talentSubtype.set(cmp.value())
     })
     
-}
-
-export const hideTalentDescription = function(entry: Component<unknown>) {
-    entry.find("talent_desc_col").hide()
 }

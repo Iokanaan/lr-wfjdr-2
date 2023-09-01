@@ -2,15 +2,13 @@ import { setupRepeater } from "../utils/repeaters"
 
 export const setupArmorRepeater = function(sheet: Sheet<unknown>) {
     const repeater = sheet.get("armor_repeater") as Component<Record<string, ArmorData>>
-    setupRepeater(repeater, setupArmorEditEntry, function() {})
+    setupRepeater(repeater, null, null)
     repeater.on('click', function(rep: Component<Record<string, ArmorData>>) {
         wait(100, function() {
            setArmorSchema(sheet, rep)
         })
     })
 }
-
-export const setupArmorEditEntry = function(entry: Component<unknown>) {}
 
 export const setArmorSchema = function(sheet: Sheet<CharData>, repeater: Component<Record<string, ArmorData>>) {
     const armure = { "Tête": 0, "Bras": 0, "Corps": 0, "Jambes": 0 }
