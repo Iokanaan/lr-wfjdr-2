@@ -41,10 +41,9 @@ export const setSleepListener = function(sheet: Sheet) {
     sheet.get("sleep").on("click", function() {
 
         // On donne un PV si le personnage n'est pas gravement blessé
-        const bActuel = signals['B_actuel']
-        if(bActuel() > 3 && bActuel() <  (signals['B']() as number)) {
-            bActuel.set(bActuel() + 1)
-            sheet.get("B_actuel").value(bActuel())
+        if(signals["B_actuel"]() > 3 && signals["B_actuel"]() <  (signals['B']() as number)) {
+            signals["B_actuel"].set(signals["B_actuel"]() + 1)
+            sheet.get("B_actuel").value(signals["B_actuel"]())
         }
 
         // On restaure les points de fortune
@@ -159,12 +158,12 @@ export const setBlessuresListener = function(sheet: Sheet<CharData>) {
     const bMaxCmp = sheet.get("b_max")
 
     // Signal des blessures actuelles
-    const bActuel = signal(sheet.get("B_actuel").value() as number)
+    signals["B_actuel"] = signal(sheet.get("B_actuel").value() as number)
 
     // Adaptation de la couleur en fonction des blessures
     computed(function() {
         // Si blessures <= 3 affichage du texte en rouge
-        if(bActuel() <= 3) {
+        if(signals["B_actuel"]() <= 3) {
             bActuelCmp.addClass("text-danger")
             bActuelCmp.removeClass("text-light")
             bMaxCmp.addClass("text-danger")
@@ -176,10 +175,10 @@ export const setBlessuresListener = function(sheet: Sheet<CharData>) {
             bMaxCmp.removeClass("text-danger")
             bMaxCmp.addClass("text-light")
         }
-    }, [bActuel])
+    }, [signals["B_actuel"]])
 
     // Mise à jour du signal à l'update de l'input
     bActuelCmp.on("update", function(cmp: Component) { 
-        bActuel.set(cmp.value()) 
+        signals["B_actuel"].set(cmp.value()) 
     })
 }

@@ -20,7 +20,6 @@ import { setupWeaponEditEntry, setupWeaponViewEntry } from "./combat/weaponRepea
 encombrement
 talents application
 Icones bizarre
-drop armes dégats
 revue armure
 */
 
