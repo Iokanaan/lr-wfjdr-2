@@ -2,7 +2,8 @@ import { setupArmorRepeater, setArmorSchema } from "./armor/armorRepeater";
 import { setupCarrierRepeater, setupFolieRepeater } from "./bio/bio";
 import { globalSheets } from "./globals";
 import { checkEncombrement, setBlessuresListener, setClassEditor, setInitiativeListener, setMaxEncombrement, setRaceEditor, setSleepListener } from "./leftPane/leftPane";
-import { hideMagicDescription, setupMagicRepeater } from "./magic/magic";
+import { hideDescription, setupMagicRepeater } from "./magic/magic";
+import { setupRuneRepeaters } from "./magic/runes";
 import { rollResultHandler } from "./roll/rollHandler";
 import { setupBasicSkill, setupSkillEditEntry, setupSkillViewEntry } from "./skills/skills";
 import { setBStatListener, setBonuses, setStatListeners } from "./stats/stats";
@@ -11,24 +12,13 @@ import { setupRepeater } from "./utils/repeaters";
 import { setArmeImpro, setMunitionListener, setPugilat } from "./weapons/weaponBasics";
 import { setupWeaponRepeater } from "./weapons/weaponRepeater";
 
-/**
- * TODO
- * Magie
- * Monstres
- * Encombrement calcul
- * bindings
- * drop dice
- */
 
 /*
 rituels
-rune
-drop dice
 encombrement
 talents application
-
 Icones bizarre
-
+bug drop craft
 */
 
 
@@ -119,7 +109,14 @@ init = function(sheet: Sheet<any>) {
             //Magie
             setupMagicRepeater(sheet)
             each((sheet.get("magic_repeater") as Component<Record<string, Spell>>).value(), function(_, entryId) {
-                hideMagicDescription(sheet.get("magic_repeater").find(entryId))
+                hideDescription(sheet.get("magic_repeater").find(entryId), "magic_desc_col")
+            })
+            setupRuneRepeaters(sheet)
+            each((sheet.get("rune_repeater") as Component<Record<string, unknown>>).value(), function(_, entryId) {
+                hideDescription(sheet.get("rune_repeater").find(entryId), "desc_col")
+            })
+            each((sheet.get("rune_majeur_repeater") as Component<Record<string, unknown>>).value(), function(_, entryId) {
+                hideDescription(sheet.get("rune_majeur_repeater").find(entryId), "desc_col")
             })
         } catch(e) {
             log("Error initializing magic")

@@ -26,7 +26,7 @@ export const checkEncombrement = function(sheet: Sheet) {
             encMaxCmp.removeClass("text-danger")
         }
     }, [encMax, encVal])
-    encValCmp.on("update", function(cmp: Component<number>) { encVal.set(cmp.value()) })
+    encValCmp.on("update", function(cmp: Component<number>) {encVal.set(cmp.value()) })
 }
 
 export const setSleepListener = function(sheet: Sheet) {

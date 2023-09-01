@@ -12,7 +12,8 @@ type RollTags = {
     referenceRoll: number,
     damageBonus: number,
     isMagic: boolean,
-    isVulgaire: boolean
+    isVulgaire: boolean,
+    isRune: boolean
 }
 
 export const rollResultHandler = function(result: DiceResult, callback: DiceResultCallback) {
@@ -31,7 +32,11 @@ export const rollResultHandler = function(result: DiceResult, callback: DiceResu
                     handleAttack(sheet, rollTags)
                 }
             } else {
-                handleSpell(sheet, result, rollTags)
+                if(rollTags.isRune) {
+                    handleRune(sheet, result, rollTags)
+                } else {
+                    handleSpell(sheet, result, rollTags)
+                }
             }
         } else {
             handleDamage(sheet, result, rollTags)
@@ -49,7 +54,9 @@ export const roll = function(sheet: Sheet<unknown>, title: string, target: numbe
 }
 
 export const rollMagic = function(sheet: Sheet<unknown>, title: string, nDice: number, target: number, tags: string[]) {
+    log(target)
     tags.push("magic")
+    tags.push("target_" + intToWord(target))
     tags.push("sheet_" + intToWord(sheet.getSheetId()))
     if(tags.indexOf("vulgaire") !== -1) {
         nDice + 1
@@ -133,7 +140,8 @@ const parseTags = function(sheet: Sheet<unknown>, result: DiceResult): RollTags 
         'referenceRoll': referenceRoll,
         'damageBonus': damageBonus,
         'isMagic': result.allTags.indexOf("magic") !== -1,
-        'isVulgaire': result.allTags.indexOf("vulgaire") !== -1
+        'isVulgaire': result.allTags.indexOf("vulgaire") !== -1,
+        'isRune': result.allTags.indexOf("rune") !== -1
     }
 }
 
@@ -164,6 +172,20 @@ const handleD100 = function(sheet: Sheet<unknown>, result: DiceResult, rollTags:
     }
 }
 
+const handleRune = function(sheet: Sheet<unknown>, result: DiceResult, rollTags: RollTags) {
+    if(rollTags.target !== undefined) {
+        const diff = result.total - rollTags.target
+        if(diff < 0) {
+            sheet.get("result_label").text(result.total.toString())
+            sheet.get("result_subtext").text("Échoué de " + Math.abs(diff))
+        } else {
+            sheet.get("result_label").text(result.total.toString())
+            sheet.get("result_subtext").text("Réussi de " + Math.abs(diff))
+        }
+    } else {
+        sheet.get("result_label").text(result.total.toString())
+    }
+}
 
 const handleDamage = function(sheet: Sheet<unknown>, result: DiceResult, rollTags: RollTags) {
     sheet.get("result_label").text(result.total > 0 ? result.total.toString() : "0")
@@ -193,10 +215,9 @@ const handleSpell = function(sheet: Sheet<unknown>, result: DiceResult, rollTags
         total += result.all[i].value
     }
     sheet.get("result_label").text(total.toString())
-    const nbDicesByValue: Record<string, number>= { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0, "9": 0, "10": 0 }
+
     let fumble = true
-    for(let i=0; i<result.all.length; i++) {
-        nbDicesByValue[result.all[i].value]++
+    for(let i=0; i<nDices; i++) {
         fumble = fumble && result.all[i].value === 1
     }
     if(fumble) {
@@ -205,6 +226,11 @@ const handleSpell = function(sheet: Sheet<unknown>, result: DiceResult, rollTags
         if(rollTags.target !== undefined) {
             sheet.get("result_subtext").text(total >= rollTags.target ? "Réussi de " + (total - rollTags.target).toString() : "Échoué de " + (rollTags.target - total).toString())
         }
+    }
+
+    const nbDicesByValue: Record<string, number>= { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0, "9": 0, "10": 0 }
+    for(let i=0; i<result.all.length; i++) {
+        nbDicesByValue[result.all[i].value]++
     }
     each(nbDicesByValue, function(val) {
         if(val > 1) {

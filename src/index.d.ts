@@ -45,7 +45,7 @@ declare global {
     declare const each: <T>(c: Record<string, T>, f: (i: T, eid: string) => void) => void;
 
     declare const Tables: Table;
-        interface Table {
+    interface Table {
         get(elem: 'skills_basic'): LrObject<SkillBasic>
         get(elem: 'races'): LrObject<Race>
         get(elem: 'competences_av'): LrObject<SkillAv>
@@ -56,6 +56,13 @@ declare global {
         get(elem: 'magie_mineure'): LrObject<Spell>
         get(id: string): LrObject
     }
+
+    declare const Bindings: Bindings
+    interface Bindings {
+        add(name: string, cmpId: string, viewId: string, data: () => Object)
+        send(sheet: Sheet<CharData>, name: string)
+    }
+
 
     type DomaineMagie = {
         id: string,

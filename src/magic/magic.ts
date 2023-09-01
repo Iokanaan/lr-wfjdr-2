@@ -5,14 +5,11 @@ import { computed, intToWord, signal } from "../utils/utils"
 const magies = {} as Record<string, Record<string, Record<string, Spell>>>
 const typesMagie = Tables.get("types_magie")
 typesMagie.each(function(type: DomaineMagie) {
-    log(type)
     magies[type.id] = {}
     if(type.id !== "magie_mineure") {
         Tables.get(type.id as string).each(function(domain: DomaineMagie) {
-            log(domain)
             magies[type.id][domain.id] = {}
             Tables.get(domain.id).each(function(spell: Spell) {
-                log(spell)
                 magies[type.id][domain.id][spell.id] = spell
             })
         })
@@ -36,15 +33,14 @@ const setupMagicViewEntry = function(sheet: Sheet) {
         entry.find("spell_label").on("click", function(component: Component<unknown>) {
             const data = (sheet.get("magic_repeater").value() as Record<string, SpellKnown>)[component.index()]
             let target = data.difficulte
-            log(entry.find("use_ingredient").value())
             if(entry.find("use_ingredient").value() === true) {
                 target -= data.bonus_ingredient
             }
             let castLevel = sheet.get("cast_level").value() as number
             if(castLevel === null) {
-                castLevel = sheet.get("Mag").value() as number
+                castLevel = parseInt(sheet.get("Mag").text()) as number
             }
-            rollMagic(sheet, component.text(), castLevel, target, ["magic, target_" + intToWord(target)])
+            rollMagic(sheet, component.text(), castLevel, target, [])
         })
     
         entry.find("magic_display").on("click", function(cmp: Component<unknown>) {
@@ -56,7 +52,6 @@ const setupMagicViewEntry = function(sheet: Sheet) {
             }
         })
 
-        log(entry.value())
         Bindings.add(entry.value().spell_name, "bind_spell", "MagieDisplay", function() {
             return { 
                 "spell_name": entry.value().spell_name,
@@ -176,6 +171,6 @@ const setupMagicEditEntry = function(entry: Component) {
 
 }
 
-export const hideMagicDescription = function(entry: Component<unknown>) {
-    entry.find("magic_desc_col").hide()
+export const hideDescription = function(entry: Component<unknown>, descId: string) {
+    entry.find(descId).hide()
 }

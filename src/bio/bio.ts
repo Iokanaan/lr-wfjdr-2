@@ -2,9 +2,7 @@ import { setupRepeater } from "../utils/repeaters"
 
 export const setupCarrierRepeater = function(sheet: Sheet<CharData>) {
     const repeater = sheet.get("carrier_repeater")
-    log("do")
     setupRepeater(repeater, function(entry: Component) { 
-        log("setup_bio_repeater")
         entry.find("ancienne_carriere").on("update", function(cmp) {
             entry.find("ancienne_carriere_name").value(Tables.get("carriere").get(cmp.value()).name)
         })
