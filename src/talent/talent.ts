@@ -1,6 +1,33 @@
-import { UpdateBuilder } from "firebase-functions/v1/remoteConfig"
-import { setupRepeater } from "../utils/repeaters"
 import { computed, signal } from "../utils/utils"
+
+const talents_choices: Record<"maitrise" | "magie_commune" | "science_de_la_magie" | "sombre_savoir" | "inspiration_divine" | "magie_mineure", Record<string, string>> & Record<string, undefined | Record<string,string>> = {
+    "maitrise" : {},
+    "magie_commune" : {},
+    "science_de_la_magie" : {},
+    "sombre_savoir": {},
+    "inspiration_divine": {},
+    "magie_mineure": {}
+}
+
+// Remplir tous les sous-type de talents dans des tableaux
+Tables.get("groupe_armes").each(function(val) {
+    talents_choices["maitrise"][val.name] = val.name  
+})
+Tables.get("magies_communes").each(function(val) {
+    talents_choices["magie_commune"][val.name] = val.long_name  
+})
+Tables.get("domaines_occultes").each(function(val) {
+    talents_choices["science_de_la_magie"][val.name] = val.long_name  
+})
+Tables.get("sombres_savoirs").each(function(val) {
+    talents_choices["sombre_savoir"][val.name] = val.long_name  
+})
+Tables.get("domaines_divins").each(function(val) {
+    talents_choices["inspiration_divine"][val.name] = val.long_name  
+})
+Tables.get("magie_mineure").each(function(val) {
+    talents_choices["magie_mineure"][val.name] = val.name  
+})
 
 export const setupTalentViewEntry = function(entry: Component) {
     
@@ -22,73 +49,56 @@ export const setupTalentViewEntry = function(entry: Component) {
 }
 
 export const setupTalentEditEntry = function(entry: Component<unknown>) {
-    entry.find("desc_talent").text(Tables.get("talents").get((entry.find("nom_talent") as Component<string>).value()).description)
-    entry.find("desc_talent_input").value(Tables.get("talents").get((entry.find("nom_talent") as Component<string>).value()).description)
-    entry.find("talent_name").value(Tables.get("talents").get((entry.find("nom_talent") as Component<string>).value()).name)
 
-    const talents_choices: Record<"maitrise" | "magie_commune" | "science_de_la_magie" | "sombre_savoir" | "inspiration_divine" | "magie_mineure", Record<string, string>> & Record<string, undefined | Record<string,string>> = {
-        "maitrise" : {},
-        "magie_commune" : {},
-        "science_de_la_magie" : {},
-        "sombre_savoir": {},
-        "inspiration_divine": {},
-        "magie_mineure": {}
-    }
-    
-    Tables.get("groupe_armes").each(function(val) {
-        talents_choices["maitrise"][val.name] = val.name  
-    })
-    Tables.get("magies_communes").each(function(val) {
-        talents_choices["magie_commune"][val.name] = val.long_name  
-    })
-    Tables.get("domaines_occultes").each(function(val) {
-        talents_choices["science_de_la_magie"][val.name] = val.long_name  
-    })
-    Tables.get("sombres_savoirs").each(function(val) {
-        talents_choices["sombre_savoir"][val.name] = val.long_name  
-    })
-    Tables.get("domaines_divins").each(function(val) {
-        talents_choices["inspiration_divine"][val.name] = val.long_name  
-    })
-    Tables.get("magie_mineure").each(function(val) {
-        talents_choices["magie_mineure"][val.name] = val.name  
-    })
-
-    const subtypeChoiceCmp = entry.find("subtype_choice") as ChoiceComponent
-    const talentValCmp = entry.find("nom_talent")
+    const subtypeChoiceCmp = entry.find("subtype_choice") as ChoiceComponent<string>
+    const talentValCmp = entry.find("nom_talent_choice")
     const subtypeCmp = entry.find("talent_subtype") as Component<string | null>
-    const talentVal = signal(entry.find("nom_talent").value())
-    const talentSubtype = signal(subtypeCmp.value())
-    
+
+    // Définition du talent dans un signal
+    const talentVal = signal(talentValCmp.value())
 
     computed(function() {
         const choiceList = talents_choices[talentVal()]
+        // Si le talent choisi possède des sous-types, alors on affiche la liste déroulante associée
+        log(choiceList)
         if(choiceList !== undefined) {
             subtypeChoiceCmp.setChoices(choiceList)
-            subtypeChoiceCmp.value()
-            subtypeCmp.value(talentSubtype())
+            if(choiceList[subtypeChoiceCmp.value()] === undefined) {
+                subtypeChoiceCmp.value(Object.keys(choiceList)[0])
+                subtypeCmp.value(Object.values(choiceList)[0])
+            }
             subtypeChoiceCmp.show()
         } else {
-            if(subtypeChoiceCmp.value() !== null) {
-                subtypeChoiceCmp.setChoices({})
-                subtypeChoiceCmp.value(null)
-                subtypeCmp.value(null)
-                subtypeChoiceCmp.hide()
-            }
+            // Si non on met tous les champs associés aux sous-type à null
+            subtypeChoiceCmp.setChoices({})
+            subtypeCmp.value(null)
+            subtypeChoiceCmp.hide()
         }
-    }, [talentVal, talentSubtype])
+    }, [talentVal])
     
-    entry.find("nom_talent").on("update", function(cmp: Component<string>) {
-        entry.find("desc_talent").text(Tables.get("talents").get(cmp.value()).description)
-        entry.find("desc_talent_input").value(Tables.get("talents").get(cmp.value()).description)
+    // Affichage des description au choix du talent
+    entry.find("nom_talent_choice").on("update", function(cmp: Component<string>) {
+        entry.find("talent_desc").value(Tables.get("talents").get(cmp.value()).description)
         entry.find("talent_name").value(Tables.get("talents").get(cmp.value()).name)
         talentVal.set(cmp.value())
     })
 
-    
+    // Gestion du sous-type
     subtypeChoiceCmp.on("update", function(cmp: Component<string>) {
-        entry.find("talent_subtype").value(cmp.value())
-        talentSubtype.set(cmp.value())
+        subtypeCmp.value(cmp.value())
     })
     
+
+    entry.find("display_custom").on("click", function() {
+        entry.find("custom_row").show()
+        entry.find("predef_row").hide()
+    })
+
+    entry.find("display_predef").on("click", function() {
+        entry.find("custom_row").hide()
+        entry.find("predef_row").show()
+        entry.find("talent_desc").value(Tables.get("talents").get(talentVal()).description)
+        entry.find("talent_name").value(Tables.get("talents").get(talentVal()).name)
+        talentVal.set(talentVal())
+    })
 }

@@ -2,17 +2,6 @@ import { signals } from "../globals"
 import { roll } from "../roll/rollHandler"
 import { computed, signal } from "../utils/utils"
 
-const variable_comp: string[] = []
-const variable_stat_comp: string[] = []
-Tables.get("competences_av").each(function(comp) {
-  if(comp.variable === "true") {
-    variable_comp.push(comp.id)
-  }
-  if(comp.stat === "variable") {
-    variable_stat_comp.push(comp.id)
-  }
-})
-
 export const setupBasicSkill = function(sheet: Sheet, skill: SkillBasic) {
   setupSkill(sheet.get, skill.cmp_id, skill.stat)
 }
@@ -61,18 +50,22 @@ export const setupSkillEditEntry = function(entry: Component) {
     }
   }, [skill])
 
+  // Set skill name base on signal
   computed(function() {
     entry.find("nom_comp_label").value(skill().name)
   }, [skill])
 
+  // Set skill in signal on choice
   entry.find("nom_comp").on("update", function(cmp: Component<string>) {
     skill.set(Tables.get("competences_av").get(cmp.value()))
   })
 
+  // Set custom stat based on choice
   entry.find("custom_stat_comp").on("update", function(cmp: Component<string>) {
     customStat.set(cmp.value())
   })
 
+  // Passage en mode custom
   entry.find("display_custom").on("click", function() {
     if(entry.find("nom_comp").visible()) {
       entry.find("nom_comp").hide()
@@ -90,14 +83,16 @@ export const setupSkillEditEntry = function(entry: Component) {
       entry.find("custom_stat_comp").hide()
     }
   })
-
-
 }
 
 const setupSkill = function(get: (id: string) => Component, skillCmpId: string, stat: Stat) {
+
+  // Définition des signaux pour les cases à cocher
   const signalAq = signal(get('comp_' + skillCmpId + '_acq').value())
   const signal10 = signal(get('comp_' + skillCmpId + '_10').value())
   const signal20 = signal(get('comp_' + skillCmpId + '_20').value())
+
+  // Calcul du niveau de compétence
   const signalLevel = computed(
     function() {
       if(!signalAq()) { return 0 }
@@ -106,6 +101,8 @@ const setupSkill = function(get: (id: string) => Component, skillCmpId: string, 
       return 3
     }
   , [signalAq, signal10, signal20])
+
+  // Calcul de la valeur de compétence selon la stat et le niveau
   const skillVal = computed(
     function() {
       let value = signals[stat]()
@@ -126,9 +123,13 @@ const setupSkill = function(get: (id: string) => Component, skillCmpId: string, 
       return value
     }
   , [signals[stat], signalLevel])
+
+  // Mise à jour des signaux sur les update de checkbox
   get('comp_' + skillCmpId + '_acq').on('update', function(cmp) { signalAq.set(cmp.value()) })
   get('comp_' + skillCmpId + '_10').on('update', function(cmp) { signal10.set(cmp.value()) })
   get('comp_' + skillCmpId + '_20').on('update', function(cmp) { signal20.set(cmp.value()) })
+  
+  // Lancer de compétence
   get('comp_' + skillCmpId + '_label').on('click', function(cmp) {
      roll(cmp.sheet(), cmp.text(), skillVal(), [])
   })

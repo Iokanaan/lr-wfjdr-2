@@ -2,11 +2,6 @@ import { signals } from "../globals"
 import { switchCarrier } from "../help/carriers"
 import { computed, signal } from "../utils/utils"
 
-// Calcul de l'encombrement max en fonction de la force
-export const setMaxEncombrement = function(sheet: Sheet) {
-
-}
-
 export const checkEncombrement = function(sheet: Sheet) {
     
     const encMaxCmp = sheet.get("max_encombrement")

@@ -5,6 +5,22 @@ import { WeaponSizeId, WeaponWieldingId, WeaponData } from "./weapon/types/weapo
 
 declare global { 
 
+    type RollTags = {
+        target?: number,
+        sheetSource: Sheet<unknown>,
+        isAttack: boolean,
+        isDamage: boolean,
+        isCrit: boolean,
+        isPercutante: boolean,
+        isEpuisante: boolean,
+        referenceRoll: number,
+        damageBonus: number,
+        isMagic: boolean,
+        isVulgaire: boolean,
+        isRune: boolean
+    }
+    
+
     interface Signal<T> {
         (): T;
         set(t:T)

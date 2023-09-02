@@ -1,14 +1,4 @@
-export const charToInt = function(letter: string) {
-    if(letter === undefined) {
-        return 0
-    }
-    return letter.charCodeAt(0) - 97
-}
-
-export const intToChar = function(n: number) {
-    return String.fromCharCode(97 + n)
-}
-
+// Conversion d'un entier vers du text pour transmission dans les tags
 export const intToWord = function(n: number) {
     let neg = false
     if(n < 0) {
@@ -18,7 +8,7 @@ export const intToWord = function(n: number) {
     const chars = n.toString().split('')
     let word = ''
     for(var i in chars) {
-        word += intToChar(parseInt(chars[i]))
+        word += String.fromCharCode(97 + parseInt(chars[i]))
     }
     if(neg) {
         return "Z" + word
@@ -27,6 +17,7 @@ export const intToWord = function(n: number) {
     }
 }
 
+// Fonction inverse de la précédente
 export const wordToInt = function(str: string) {
     let neg = false
     if(str.startsWith("Z")) {
@@ -45,6 +36,7 @@ export const wordToInt = function(str: string) {
     }
 }
 
+// Implémentation du pattern signal
 export function signal<T>(value: T): Signal<T> {
     let state = value;
     let handlers: Handler<T>[] = []
@@ -67,6 +59,7 @@ export function signal<T>(value: T): Signal<T> {
     return _signal;
 }
 
+// Implémentation du pattern computed
 export function computed<T>(compute: () => T, dependencies: Signal<unknown>[] | Computed<unknown>[]): Computed<T> {
     const s = signal(compute());
     for(let i=0; i<dependencies.length; i++) {
@@ -78,8 +71,9 @@ export function computed<T>(compute: () => T, dependencies: Signal<unknown>[] | 
     return s;
 }
 
+// Classe utilitaire pour cacher des objets dans les repeaters
 export const hideDescriptions = function(repeater: Component<Record<string, unknown>>, descId: string) {
     each(repeater.value(), function(_, entryId) {
-        repeater.find(entryId).hide()
+        repeater.find(entryId).find(descId).hide()
     })
 }

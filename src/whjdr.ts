@@ -2,7 +2,7 @@ import { setupArmorRepeater, setArmorSchema } from "./combat/armorRepeater";
 import { setupCarrierEditEntry, setupFolieViewEntry } from "./bio/bio";
 import { globalSheets } from "./globals";
 import { setCarrierInfoListener } from "./help/carriers";
-import { checkEncombrement, setBlessuresListener, setClassEditor, setInitiativeListener, setMaxEncombrement, setRaceEditor, setSleepListener } from "./leftPane/leftPane";
+import { checkEncombrement, setBlessuresListener, setClassEditor, setInitiativeListener, setRaceEditor, setSleepListener } from "./leftPane/leftPane";
 import { setupMagicEditEntry, setupMagicViewEntry } from "./magic/magic";
 import { setupRituelViewEntry } from "./magic/rituels";
 import { setupRuneEditEntry, setupRuneViewEntry } from "./magic/runes";
@@ -95,7 +95,6 @@ init = function(sheet: Sheet<any>) {
 
         try {
             // Volet gauche
-            setMaxEncombrement(sheet)
             checkEncombrement(sheet)
             setSleepListener(sheet)
             setRaceEditor(sheet)

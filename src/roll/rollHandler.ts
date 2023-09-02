@@ -1,21 +1,6 @@
 import { wordToInt, intToWord } from "../utils/utils"
 import { globalSheets } from "../globals"
 
-type RollTags = {
-    target?: number,
-    sheetSource: Sheet<unknown>,
-    isAttack: boolean,
-    isDamage: boolean,
-    isCrit: boolean,
-    isPercutante: boolean,
-    isEpuisante: boolean,
-    referenceRoll: number,
-    damageBonus: number,
-    isMagic: boolean,
-    isVulgaire: boolean,
-    isRune: boolean
-}
-
 export const rollResultHandler = function(result: DiceResult, callback: DiceResultCallback) {
     callback('DiceResultPopup', function(sheet: Sheet<unknown>) {
         sheet.get("roll_damage").hide()
@@ -32,6 +17,7 @@ export const rollResultHandler = function(result: DiceResult, callback: DiceResu
                     handleAttack(sheet, rollTags)
                 }
             } else {
+                // Gestion de la magie
                 if(rollTags.isRune) {
                     handleRune(sheet, result, rollTags)
                 } else {
@@ -39,12 +25,14 @@ export const rollResultHandler = function(result: DiceResult, callback: DiceResu
                 }
             }
         } else {
+            // Gestiion jets de dégâts
             handleDamage(sheet, result, rollTags)
         }
     })
 }
 
 export const roll = function(sheet: Sheet<unknown>, title: string, target: number, tags: string[]) {
+    // Transmission de la valeur cible et la feuille dans les tags
     tags.push("target_" + intToWord(target))
     tags.push("sheet_" + intToWord(sheet.getSheetId()))
     new RollBuilder(sheet)
@@ -54,7 +42,7 @@ export const roll = function(sheet: Sheet<unknown>, title: string, target: numbe
 }
 
 export const rollMagic = function(sheet: Sheet<unknown>, title: string, nDice: number, target: number, tags: string[]) {
-    log(target)
+    // Transmission de la valeur cible et la feuille dans les tags, ajout tu tag "magic"
     tags.push("magic")
     tags.push("target_" + intToWord(target))
     tags.push("sheet_" + intToWord(sheet.getSheetId()))
@@ -68,14 +56,17 @@ export const rollMagic = function(sheet: Sheet<unknown>, title: string, nDice: n
 }
 
 const rollDamage = function(sheet: Sheet<unknown>, title: string, nDice: number, damageBonus: number, tags: string[]) {
+    // Transmission de la fiche
     tags.push("sheet_" + intToWord(sheet.getSheetId()))
     new RollBuilder(sheet)
+        // Jets en keeph pour prendre en compte l'attribut percutant
         .expression("(keeph(" + nDice + "d10) + " + damageBonus + ")[" + tags.join(',') + "]")
         .title(title)
         .roll()
 }
 
 const rollCrit = function(sheet: Sheet<unknown>, title: string, nDice: number, damageBonus: number, tags: string[]) {
+    // Comme damage, mais explosif
     tags.push("sheet_" + intToWord(sheet.getSheetId()))
     tags.push("crit")
     const tags_str = tags.length != 0 ? "[" + tags.join(',') + "]" : ""
@@ -95,6 +86,8 @@ const parseIntTag = function(tags: string[], regex: RegExp): number | undefined 
 }
 
 const attackLocation = function(roll: number) {
+    
+    // Inversion des chiffres du lancé pour déterminer la localisation
     let location = undefined
     if(roll !== 100) {
         const digits = roll.toString().slice(-2).split('')
@@ -103,6 +96,7 @@ const attackLocation = function(roll: number) {
         location = 100
     }
 
+    // Identification de la localisation
     switch(true) {
         case location <= 15:
             return "Tête"
@@ -119,6 +113,7 @@ const attackLocation = function(roll: number) {
     }
 }
 
+// Parse tous les tags reçus dans le lancé
 const parseTags = function(sheet: Sheet<unknown>, result: DiceResult): RollTags {
     let referenceRoll = parseIntTag(result.allTags, /^roll_/g)
     if(referenceRoll === undefined) {
@@ -145,19 +140,28 @@ const parseTags = function(sheet: Sheet<unknown>, result: DiceResult): RollTags 
     }
 }
 
+// Gestion d'un jet d'attaque
 const handleAttack = function(sheet: Sheet<unknown>, rollTags: RollTags) {
+    
+    // Ajout des tags du jet de dégat (damage, lancé de référence pour la localisation, valeur cible de référence)
     const damageTags = ["damage", "roll_" + intToWord(rollTags.referenceRoll) , "target_" + intToWord(rollTags.target !== undefined ? rollTags.target : 0)]
+    
+    // Ajout du bouton roll 1d10 si arme n'est pas percutante
     if(!rollTags.isPercutante || rollTags.isEpuisante) {
         sheet.get("roll_damage").on("click", function() { (rollTags.isCrit ? rollCrit : rollDamage)(rollTags.sheetSource, "Dégâts", 1, rollTags.damageBonus, damageTags) })
         sheet.get("roll_damage").show()
     }
+    // Ajout du buton roll 2d10 si arme est percutante
     if(rollTags.isPercutante) {
         sheet.get("roll_damage_2").on("click", function() { (rollTags.isCrit ? rollCrit : rollDamage)(rollTags.sheetSource, "Dégâts", 2, rollTags.damageBonus, damageTags) })
         sheet.get("roll_damage_2").show()
     }
 }
 
+// Gestion d'un D100
 const handleD100 = function(sheet: Sheet<unknown>, result: DiceResult, rollTags: RollTags) {
+
+    // Si une valeur cible est définie, calculer la différence et indiquer si le jet est réussi ou échoué
     if(rollTags.target !== undefined) {
         const diff = result.total - rollTags.target
         if(diff > 0) {
@@ -172,7 +176,11 @@ const handleD100 = function(sheet: Sheet<unknown>, result: DiceResult, rollTags:
     }
 }
 
+// Gestion d'un jet de Rune
 const handleRune = function(sheet: Sheet<unknown>, result: DiceResult, rollTags: RollTags) {
+
+    // Si une valeur cible est définie, calculer la différence et indiquer si le jet est réussi ou échoué
+    // Pas d'échec critques / échos du Chaos pour les runes
     if(rollTags.target !== undefined) {
         const diff = result.total - rollTags.target
         if(diff < 0) {
@@ -187,10 +195,11 @@ const handleRune = function(sheet: Sheet<unknown>, result: DiceResult, rollTags:
     }
 }
 
+// Gestion d'un jet de dégâts
 const handleDamage = function(sheet: Sheet<unknown>, result: DiceResult, rollTags: RollTags) {
     sheet.get("result_label").text(result.total > 0 ? result.total.toString() : "0")
     sheet.get("result_subtext").text(attackLocation(rollTags.referenceRoll))
-    // Si jet de dégâts normal, et qu'on fait 10, on affiche la confirmation du critique
+    // Si jet de dégâts normal (pas un critique), et qu'on fait 10, on affiche la confirmation du critique
     const target = rollTags.target !== undefined ? rollTags.target : 0
     if(!rollTags.isCrit) {
         for(let i=0; i<result.all.length; i++) {
@@ -205,7 +214,10 @@ const handleDamage = function(sheet: Sheet<unknown>, result: DiceResult, rollTag
     }
 }
 
+// Gestion d'un lancer de sort
 const handleSpell = function(sheet: Sheet<unknown>, result: DiceResult, rollTags: RollTags) {
+    
+    // Si magie vulgaire, on retire un dé pour déterminer la somme
     let nDices = result.all.length
     if(rollTags.isVulgaire) {
         nDices--
@@ -216,6 +228,7 @@ const handleSpell = function(sheet: Sheet<unknown>, result: DiceResult, rollTags
     }
     sheet.get("result_label").text(total.toString())
 
+    // On regarde si on a lancé que des 1, si oui échec critique
     let fumble = true
     for(let i=0; i<nDices; i++) {
         fumble = fumble && result.all[i].value === 1
@@ -223,11 +236,13 @@ const handleSpell = function(sheet: Sheet<unknown>, result: DiceResult, rollTags
     if(fumble) {
         sheet.get("result_subtext_danger").text("Échec critique")
     } else {
+        // Si pas de fumble, on indique si le jet est réussi ou non
         if(rollTags.target !== undefined) {
             sheet.get("result_subtext").text(total >= rollTags.target ? "Réussi de " + (total - rollTags.target).toString() : "Échoué de " + (rollTags.target - total).toString())
         }
     }
 
+    // On regarde si on a des doubles / triples..., si oui, écho du Chaos
     const nbDicesByValue: Record<string, number>= { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0, "6": 0, "7": 0, "8": 0, "9": 0, "10": 0 }
     for(let i=0; i<result.all.length; i++) {
         nbDicesByValue[result.all[i].value]++

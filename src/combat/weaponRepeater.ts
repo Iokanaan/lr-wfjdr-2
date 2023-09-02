@@ -1,6 +1,5 @@
 import { signals } from "../globals"
 import { roll } from "../roll/rollHandler"
-import { setupRepeater } from "../utils/repeaters"
 import { computed, intToWord } from "../utils/utils"
 
 export const setupWeaponViewEntry = function(entry: Component<WeaponData>) {
@@ -64,6 +63,30 @@ export const setupWeaponEditEntry = function(entry: Component<WeaponData>) {
 
     entry.find("demi").on("click", function() {
         entry.find("rechargement").value("½")
+    })
+
+    entry.find("groupe_arme").on("update", function(cmp) {
+        if(cmp.value() === "0") {
+            entry.find("groupe_arme_exists").value(0)
+        } else {
+            entry.find("groupe_arme_exists").value(1)
+        }
+    })
+
+    entry.find("qualite").on("update", function(cmp) {
+        if(cmp.value() === "Moyenne") {
+            entry.find("non_standard_quality").value(0)
+        } else {
+            entry.find("non_standard_quality").value(1)
+        }
+    })
+
+    entry.find("attributs").on("update",function(cmp) {
+        if(cmp.value().length === 0) {
+            entry.find("has_attributes").value(0)
+        } else {
+            entry.find("has_attributes").value(1)
+        }
     })
 
 }

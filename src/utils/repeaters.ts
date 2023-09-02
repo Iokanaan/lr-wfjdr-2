@@ -7,12 +7,12 @@ export const setupRepeater = function(
     setupViewEntry: ((entry: Component<any>) => void) | null
     ) {
 
-        each(repeater.value(), function(_, entryId) {
-            entryStates[entryId] = 'VIEW'
-            if(setupViewEntry !== null) {
-                setupViewEntry(repeater.find(entryId))
-            }
-        })
+    each(repeater.value(), function(_, entryId) {
+        entryStates[entryId] = 'VIEW'
+        if(setupViewEntry !== null) {
+            setupViewEntry(repeater.find(entryId))
+        }
+    })
 
     // Gestion de l'initialisation du mode édition
     repeater.on('click', function(rep: Component<Record<string, unknown>>) {
@@ -38,6 +38,7 @@ export const setupRepeater = function(
     })
 }
 
+// Nécessaire au drop provenant de crafts
 export const cleanupRepeater = function(repeater: Component<Record<string, unknown>>) {
     each(repeater.value(), function(_, entryId) {
         entryStates[entryId] = null
