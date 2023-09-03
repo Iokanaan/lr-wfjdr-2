@@ -1,4 +1,4 @@
-import { setupArmorRepeater, setArmorSchema } from "./combat/armorRepeater";
+import { setupArmorRepeater } from "./combat/armorRepeater";
 import { setupCarrierEditEntry, setupFolieViewEntry } from "./bio/bio";
 import { globalSheets } from "./globals";
 import { setCarrierInfoListener } from "./help/carriers";
@@ -13,7 +13,9 @@ import { setupTalentEditEntry, setupTalentViewEntry } from "./talent/talent";
 import { cleanupRepeater, setupRepeater } from "./utils/repeaters";
 import { hideDescriptions } from "./utils/utils";
 import { setArmeImpro, setMunitionListener, setPugilat } from "./combat/weaponBasics";
-import { setupWeaponEditEntry, setupWeaponViewEntry } from "./combat/weaponRepeater";
+import { onWeaponDelete, setupWeaponEditEntry, setupWeaponViewEntry } from "./combat/weaponRepeater";
+import { onItemDelete, setupItemEditEntry, setupItemViewEntry } from "./items/items";
+import { onMunitionDelete, setupMunitionEditEntry, setupMunitionViewEntry } from "./combat/munitionRepeater";
 
 
 /*
@@ -56,14 +58,14 @@ init = function(sheet: Sheet<any>) {
             Tables.get("skills_basic").each(function(skill) {
                 setupBasicSkill(sheet, skill)
             })
-            setupRepeater(sheet.get("skill_repeater"), setupSkillEditEntry, setupSkillViewEntry)
+            setupRepeater(sheet.get("skill_repeater"), setupSkillEditEntry, setupSkillViewEntry, null)
         } catch(e) {
             log("Error initializing skills")
         }
 
         try {
             // Talents
-            setupRepeater(sheet.get("talent_repeater"), setupTalentEditEntry, setupTalentViewEntry)
+            setupRepeater(sheet.get("talent_repeater"), setupTalentEditEntry, setupTalentViewEntry, null)
             hideDescriptions(sheet.get("talent_repeater") as Component<Record<string, unknown>>, "talent_desc_col")
         
         } catch(e) {
@@ -75,7 +77,7 @@ init = function(sheet: Sheet<any>) {
             if(sheet.get("munition_quality").value() === null) {
                 sheet.get("munition_quality").value("Moyenne")
             }
-            setupRepeater(sheet.get("weapons_repeater"), setupWeaponEditEntry, setupWeaponViewEntry)
+            setupRepeater(sheet.get("weapons_repeater"), setupWeaponEditEntry, setupWeaponViewEntry, onWeaponDelete)
             setPugilat(sheet)
             setArmeImpro(sheet, "CC")
             setArmeImpro(sheet, "CT")
@@ -83,11 +85,15 @@ init = function(sheet: Sheet<any>) {
         } catch(e) {
             log("Error initializing weapons")
         }
+        try {
+            setupRepeater(sheet.get("munition_repeater"), setupMunitionEditEntry, setupMunitionViewEntry, onMunitionDelete)
+        } catch(e) {
+            log("Error initializing munitions")
+        }
 
         try {
             // Armure
             setupArmorRepeater(sheet)
-            setArmorSchema(sheet, sheet.get("armor_repeater") as Component<Record<string, ArmorData>>)
             sheet.get("BE_reminder").text("BE : " + sheet.get("BE").text())
         } catch(e) {
             log("Error initializing armors")
@@ -107,21 +113,28 @@ init = function(sheet: Sheet<any>) {
 
         try {
             //Magie
-            setupRepeater(sheet.get("magic_repeater"), setupMagicEditEntry, setupMagicViewEntry)
+            setupRepeater(sheet.get("magic_repeater"), setupMagicEditEntry, setupMagicViewEntry, null)
             hideDescriptions(sheet.get("magic_repeater") as Component<Record<string, unknown>> , "magic_desc_col")
-            setupRepeater(sheet.get("rune_repeater"), setupRuneEditEntry("runes"), setupRuneViewEntry)
-            setupRepeater(sheet.get("rune_majeur_repeater"), setupRuneEditEntry("runes_majeures"), setupRuneViewEntry)
+            setupRepeater(sheet.get("rune_repeater"), setupRuneEditEntry("runes"), setupRuneViewEntry, null)
+            setupRepeater(sheet.get("rune_majeur_repeater"), setupRuneEditEntry("runes_majeures"), setupRuneViewEntry, null)
             hideDescriptions(sheet.get("rune_repeater") as Component<Record<string, unknown>>, "desc_col")
             hideDescriptions(sheet.get("rune_majeur_repeater") as Component<Record<string, unknown>>, "desc_col")
-            setupRepeater(sheet.get("rituel_repeater") , null, setupRituelViewEntry)
+            setupRepeater(sheet.get("rituel_repeater") , null, setupRituelViewEntry, null)
         } catch(e) {
             log("Error initializing magic")
         }
 
+        // Inventaire
+        try {
+            setupRepeater(sheet.get("item_repeater"), setupItemEditEntry, setupItemViewEntry, onItemDelete)
+        } catch(e) {
+            log("Error initializing items")
+        }
+
         // Bio
         try {
-            setupRepeater(sheet.get("carrier_repeater"), setupCarrierEditEntry, null)
-            setupRepeater(sheet.get("folie_repeater"), null, setupFolieViewEntry)
+            setupRepeater(sheet.get("carrier_repeater"), setupCarrierEditEntry, null, null)
+            setupRepeater(sheet.get("folie_repeater"), null, setupFolieViewEntry, null)
             hideDescriptions(sheet.get("folie_repeater") as Component<Record<string, unknown>>, "folie_desc_col")
         } catch(e) {
             log("Error initializing bio")

@@ -60,7 +60,6 @@ export const setupTalentEditEntry = function(entry: Component<unknown>) {
     computed(function() {
         const choiceList = talents_choices[talentVal()]
         // Si le talent choisi possède des sous-types, alors on affiche la liste déroulante associée
-        log(choiceList)
         if(choiceList !== undefined) {
             subtypeChoiceCmp.setChoices(choiceList)
             if(choiceList[subtypeChoiceCmp.value()] === undefined) {

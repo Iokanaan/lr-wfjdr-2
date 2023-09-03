@@ -1,4 +1,4 @@
-import { signals } from "../globals"
+import { signals, totalEncombrement } from "../globals"
 import { switchCarrier } from "../help/carriers"
 import { computed, signal } from "../utils/utils"
 
@@ -6,9 +6,6 @@ export const checkEncombrement = function(sheet: Sheet) {
     
     const encMaxCmp = sheet.get("max_encombrement")
     const encValCmp = sheet.get("encombrement_total")
-
-    // Création d'un signal pour l'encombrement actuel
-    const encVal = signal(sheet.get("encombrement_total").value() as number)
     
     // Calcul de l'encombrement max en fonction de la force
     const encMax = computed(function() {
@@ -16,9 +13,13 @@ export const checkEncombrement = function(sheet: Sheet) {
         return signals['F']() * 10
     }, [signals['F']])
 
+    computed(function() {
+        encValCmp.text(totalEncombrement().toString())
+    }, [totalEncombrement])
+
     // Adaptation des couleurs en fonction de l'encombrement
     computed(function() {
-        if(encVal() > encMax()) {
+        if(totalEncombrement() > encMax()) {
             encValCmp.addClass("text-danger")
             encValCmp.removeClass("text-light")
             encMaxCmp.addClass("text-danger")
@@ -27,7 +28,7 @@ export const checkEncombrement = function(sheet: Sheet) {
             encValCmp.addClass("text-light")
             encMaxCmp.removeClass("text-danger")
         }
-    }, [encMax, encVal])
+    }, [encMax, totalEncombrement])
     encValCmp.on("update", function(cmp: Component<number>) {encVal.set(cmp.value()) })
 }
 

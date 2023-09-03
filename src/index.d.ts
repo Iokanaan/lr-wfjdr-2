@@ -153,6 +153,8 @@ declare global {
         value(): T
     }
 
+    type Quality = "Moyenne" | "Bonne" | "Médiocre" | "Exceptionnelle"
+
     type WeaponGroup = {
         id: string,
         name: string
@@ -174,7 +176,7 @@ declare global {
         type_arme_as_int: 1 | 2,
         bonus_bf: boolean,
         bonus_bf_as_int: 0 | 1
-        qualite: string,
+        qualite: Quality,
         notes: string
         attributs: string[],
         rechargement: string
@@ -182,13 +184,31 @@ declare global {
     
     type ArmorData = {
         pts_armure?: number,
-        couverture?: ("Tête" | "Bras" | "Corps" | "Jambes")[]
+        couverture?: ("Tête" | "Bras" | "Corps" | "Jambes")[],
+        enc_armure: number,
+        qualite_armure: Quality
     }
 
     type DomaineObject = {
         id: string,
         name: string,
         long_name: string
+    }
+
+    type Item = {
+        enc_item: number,
+        qte_item: number,
+        nom_item: string,
+        qualite_item: Quality,
+        notes: string
+    }
+
+    type Munition = {
+        encombrement: number,
+        qte_mun: number,
+        type_mun: string,
+        notes: string,
+        qualite: Quality
     }
 
     type Spell =  {

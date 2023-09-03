@@ -164,11 +164,11 @@ const handleD100 = function(sheet: Sheet<unknown>, result: DiceResult, rollTags:
     // Si une valeur cible est définie, calculer la différence et indiquer si le jet est réussi ou échoué
     if(rollTags.target !== undefined) {
         const diff = result.total - rollTags.target
+        sheet.get("result_label").text(result.total.toString())
+        sheet.get("target_label").text("pour " + rollTags.target)
         if(diff > 0) {
-            sheet.get("result_label").text(result.total.toString())
             sheet.get("result_subtext").text("Échoué de " + Math.abs(diff))
         } else {
-            sheet.get("result_label").text(result.total.toString())
             sheet.get("result_subtext").text("Réussi de " + Math.abs(diff))
         }
     } else {
@@ -183,11 +183,11 @@ const handleRune = function(sheet: Sheet<unknown>, result: DiceResult, rollTags:
     // Pas d'échec critques / échos du Chaos pour les runes
     if(rollTags.target !== undefined) {
         const diff = result.total - rollTags.target
+        sheet.get("result_label").text(result.total.toString())
+        sheet.get("target_label").text("pour " + rollTags.target)
         if(diff < 0) {
-            sheet.get("result_label").text(result.total.toString())
             sheet.get("result_subtext").text("Échoué de " + Math.abs(diff))
         } else {
-            sheet.get("result_label").text(result.total.toString())
             sheet.get("result_subtext").text("Réussi de " + Math.abs(diff))
         }
     } else {
@@ -238,6 +238,7 @@ const handleSpell = function(sheet: Sheet<unknown>, result: DiceResult, rollTags
     } else {
         // Si pas de fumble, on indique si le jet est réussi ou non
         if(rollTags.target !== undefined) {
+            sheet.get("target_label").text("pour " + rollTags.target)
             sheet.get("result_subtext").text(total >= rollTags.target ? "Réussi de " + (total - rollTags.target).toString() : "Échoué de " + (rollTags.target - total).toString())
         }
     }

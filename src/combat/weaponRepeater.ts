@@ -1,4 +1,4 @@
-import { signals } from "../globals"
+import { encombrementRecord, signals } from "../globals"
 import { roll } from "../roll/rollHandler"
 import { computed, intToWord } from "../utils/utils"
 
@@ -6,34 +6,45 @@ export const setupWeaponViewEntry = function(entry: Component<WeaponData>) {
 
     sanitizeData(entry)
 
+    // Set du bonus de dégâts
     const damageBonus = computed(function() {
         return entry.value().bonus_bf ? entry.value().degats + (signals["BF"]()) : entry.value().degats
     }, [signals["BF"]])
+    
+    // Jet d'attaque
     entry.find("weapon_name").on("click", function(cmp: Component) {
         const targetStat = entry.value().type_arme === "1" ? "CC" : "CT"
         let target = signals[targetStat]()
+
+        // Gestion du bonus de qualité
         if(entry.value().qualite === "Exceptionnelle") {
             target += 5
         }
         if(entry.value().qualite === "Médiocre") {
             target -= 5
         }
-        const ammoQuality = entry.sheet().get("munition_quality").value()
-        if(ammoQuality === "Exceptionnelle" && entry.value().type_munition !== "0") {
-            target += 5
-        }
-        if(ammoQuality === "Médiocre" && entry.value().type_munition !== "0") {
+
+        // Gestion du bonus de qualité de munition
+        const munitionsMediocre = entry.sheet().get("munition_quality").value()
+        if(entry.value().type_arme === "2" && munitionsMediocre && entry.value().type_munition !== "0") {
             target -= 5
         }
 
         roll(entry.sheet(), cmp.text(), target, ["attack, damage_" + intToWord(damageBonus())])
     })
+
+    // Binding
     Bindings.add(entry.value().nom_arme, "bind_weapon", "WeaponDisplay", function() {
         return entry.value()
     })
     entry.find("bind_weapon").on("click", function() {
         Bindings.send(entry.sheet(), entry.value().nom_arme)
     })
+
+    // Gestion de l'encombrement
+    const encombrement = encombrementRecord()
+    encombrement[entry.id()] = entry.value().encombrement * getQualityCoeff(entry.value().qualite)
+    encombrementRecord.set(encombrement)
 
 }
 
@@ -91,6 +102,20 @@ export const setupWeaponEditEntry = function(entry: Component<WeaponData>) {
 
 }
 
+const getQualityCoeff = function(quality: Quality) {
+    if(quality === "Bonne" || quality === "Exceptionnelle") {
+        return 0.9
+    }
+    return 1
+}
+
+
+export const onWeaponDelete = function(entryId: string) {
+    // Gestion encombrement
+    const encombrement = encombrementRecord()
+    delete encombrement[entryId]
+    encombrementRecord.set(encombrement)
+}
 
 const sanitizeData = function(entry: Component<WeaponData>) {
     const entryData = entry.value()
