@@ -1,3 +1,4 @@
+import { talents, talentsByEntry } from "../globals"
 import { computed, signal } from "../utils/utils"
 
 const talents_choices: Record<"maitrise" | "magie_commune" | "science_de_la_magie" | "sombre_savoir" | "inspiration_divine" | "magie_mineure", Record<string, string>> & Record<string, undefined | Record<string,string>> = {
@@ -46,6 +47,10 @@ export const setupTalentViewEntry = function(entry: Component) {
     entry.find("bind_talent").on("click", function() {
         Bindings.send(entry.sheet(), entry.value().talent_name)
     })
+
+    const allTalents = talentsByEntry()
+    allTalents[entry.id()] = entry.value().nom_talent_choice
+    talentsByEntry.set(allTalents)
 }
 
 export const setupTalentEditEntry = function(entry: Component<unknown>) {
@@ -100,4 +105,11 @@ export const setupTalentEditEntry = function(entry: Component<unknown>) {
         entry.find("talent_name").value(Tables.get("talents").get(talentVal()).name)
         talentVal.set(talentVal())
     })
+}
+
+export const onTalentDelete = function(entryId: string) {
+    // Gestion encombrement
+    const allTalents = talentsByEntry()
+    delete allTalents[entryId]
+    talentsByEntry.set(allTalents)
 }

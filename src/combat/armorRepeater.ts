@@ -1,4 +1,4 @@
-import { encombrementRecord } from "../globals"
+import { encombrementRecord, talents } from "../globals"
 import { setupRepeater } from "../utils/repeaters"
 import { computed, signal } from "../utils/utils"
 
@@ -20,21 +20,63 @@ export const setupArmorRepeater = function(sheet: Sheet<unknown>) {
     }, [allArmors])
 
     // Initialisation du repeater
-    setupRepeater(sheet.get("armor_repeater"), null, setupArmorViewEntry, onDelete)
+    setupRepeater(sheet.get("armor_repeater"), setupArmorEditEntry, setupArmorViewEntry, onDelete)
+    
+}
+
+const setupArmorEditEntry = function(entry: Component<ArmorData>) {
+    entry.find("couverture").on("update", function(cmp) {
+        entry.find("couverture_input").value(cmp.value().join(', '))
+    })
 }
 
 // Ajout d'une pièce d'armure au total à sa création
 const setupArmorViewEntry = function(entry: Component<ArmorData>) {
 
-    // Gestion armure
-    const newArmor = allArmors()
-    newArmor[entry.id()] = readArmor(entry.value() as ArmorData)
-    allArmors.set(newArmor)
+    const drop = signal(entry.find("left_behind").value() as boolean)
 
-    // Gestion encombrement
-    const encombrement = encombrementRecord()
-    encombrement[entry.id()] = entry.value().enc_armure * getQualityCoeff(entry.value().qualite_armure)
-    encombrementRecord.set(encombrement)
+    // Gestion armure
+    computed(function() {
+        const newArmor = allArmors()
+        newArmor[entry.id()] = drop() ? { "Tête": 0, "Bras": 0, "Corps": 0, "Jambes": 0 } : readArmor(entry.value() as ArmorData)
+        allArmors.set(newArmor)
+    }, [drop])
+
+    computed(function() {
+        // Gestion encombrement
+        const encombrement = encombrementRecord()
+        encombrement[entry.id()] = drop() || talents().indexOf("robuste") !== -1 ? 0 : entry.value().enc_armure * getQualityCoeff(entry.value().qualite_armure)
+        encombrementRecord.set(encombrement)
+    }, [drop, talents])
+
+    // Gestion de la mise de côté de l'objet
+    computed(function() {
+        if(drop()) {
+            entry.find("toggle_on").hide()
+            entry.find("toggle_off").show()
+            entry.find("main_row").addClass("opacity-50")
+            entry.find("armor_row").addClass("opacity-50")
+            entry.find("notes_row").addClass("opacity-50")
+        } else {
+            entry.find("toggle_on").show()
+            entry.find("toggle_off").hide()
+            entry.find("main_row").removeClass("opacity-50")
+            entry.find("armor_row").removeClass("opacity-50")
+            entry.find("notes_row").removeClass("opacity-50")
+        }
+    }, [drop])
+
+    entry.find("toggle_on").on("click", function(cmp) {
+        entry.find("left_behind").value(true)
+    })
+
+    entry.find("toggle_off").on("click", function(cmp) {
+        entry.find("left_behind").value(false)
+    })
+
+    entry.find("left_behind").on("update", function(cmp) {
+        drop.set(cmp.value())
+    })
 }
 
 const getQualityCoeff = function(quality: Quality) {

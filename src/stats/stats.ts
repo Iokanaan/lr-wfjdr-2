@@ -47,3 +47,10 @@ export function setBStatListener(sheet: Sheet) {
         av.set(cmp.value()) 
     })
 }
+
+export function setPDStatListener(sheet: Sheet) {
+    signals['PD'] = signal(sheet.get("PD_base").value() as number)
+    sheet.get('PD_base').on('update', function(cmp: Component) { 
+        (signals['PD'] as Signal<number>).set(cmp.value()) 
+    })
+}

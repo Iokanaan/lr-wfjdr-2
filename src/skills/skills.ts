@@ -1,13 +1,23 @@
-import { signals } from "../globals"
+import { advancedSkillsByEntry, signals, talents, talentsByEntry } from "../globals"
 import { roll } from "../roll/rollHandler"
 import { computed, signal } from "../utils/utils"
 
 export const setupBasicSkill = function(sheet: Sheet, skill: SkillBasic) {
-  setupSkill(sheet.get, skill.cmp_id, skill.stat)
+  setupSkill(sheet.get, skill.cmp_id, skill.stat, skill.name, null)
 }
 
 export const setupSkillViewEntry = function(entry: Component<SkillData>) {
-  setupSkill(entry.find, "av", entry.value().comp_stat)
+  setupSkill(entry.find, "av", entry.value().comp_stat, entry.value().nom, entry.value().specialite)
+
+  const allAdvancedSkills = advancedSkillsByEntry()
+  allAdvancedSkills[entry.id()] = entry.value()
+  advancedSkillsByEntry.set(allAdvancedSkills)
+}
+
+export const onSkillDelete = function(entryId: string) {
+  const allAdvancedSkills = advancedSkillsByEntry()
+  delete allAdvancedSkills[entryId]
+  advancedSkillsByEntry.set(allAdvancedSkills)
 }
 
 export const setupSkillEditEntry = function(entry: Component) {
@@ -85,7 +95,7 @@ export const setupSkillEditEntry = function(entry: Component) {
   })
 }
 
-const setupSkill = function(get: (id: string) => Component, skillCmpId: string, stat: Stat) {
+const setupSkill = function(get: (id: string) => Component, skillCmpId: string, stat: Stat, skillName: string, specialite: string | null) {
 
   // Définition des signaux pour les cases à cocher
   const signalAq = signal(get('comp_' + skillCmpId + '_acq').value())
@@ -119,10 +129,11 @@ const setupSkill = function(get: (id: string) => Component, skillCmpId: string, 
           value = Math.round(value / 2)
           break
       }
+      value += getTalentBonus(skillName, specialite, talents())
       get("comp_" + skillCmpId +"_val").text(value.toString())
       return value
     }
-  , [signals[stat], signalLevel])
+  , [signals[stat], signalLevel, talents])
 
   // Mise à jour des signaux sur les update de checkbox
   get('comp_' + skillCmpId + '_acq').on('update', function(cmp) { signalAq.set(cmp.value()) })
@@ -133,4 +144,56 @@ const setupSkill = function(get: (id: string) => Component, skillCmpId: string, 
   get('comp_' + skillCmpId + '_label').on('click', function(cmp) {
      roll(cmp.sheet(), cmp.text(), skillVal(), [])
   })
+}
+
+const getTalentBonus = function(skillName: string, specialite: string | null, talents: string[]) {
+  let bonus = 0
+  switch(true) {
+    case talents.indexOf("acrobatie_equestre") !== -1 && skillName === "Équitation":
+      log("Application acrobatie_equestre")
+      bonus += 10
+      break
+    case talents.indexOf("dur_en_affaires") !== -1 && (skillName === "Évaluation" || skillName === "Marchandage"):
+      log("Application dur_en_affaires")
+      bonus += 10
+      break
+    case talents.indexOf("grand_voyageur") !== -1 && (skillName === "connaissances_generales" || skillName === "langue"):
+      log("Application grand_voyageur")
+      bonus += 10
+      break
+    case talents.indexOf("harmonie_aetherique") !== -1 && (skillName === "focalisation" || skillName === "sens_de_la_magie"):
+      log("Application harmonie_aetherique")
+      bonus += 10
+      break
+    case talents.indexOf("linguistique") !== -1 && (skillName === "lire_ecrire" || skillName === "langue"):
+      log("Application linguistique")
+      bonus += 10
+      break
+    case talents.indexOf("menacant") !== -1 && (skillName === "Intimidation" || skillName === "torture"):
+      log("Application menacant")
+      bonus += 10
+      break
+    case talents.indexOf("sens_aguises") !== -1 && skillName === "Perception":
+      log("Application sens_aguises")
+      bonus += 20
+      break
+    case talents.indexOf("sens_de_l_orientation") !== -1 && skillName === "orientation":
+      log("Application sens_de_l_orientation")
+      bonus += 10
+      break
+    case talents.indexOf("chirurgie") !== -1 && skillName === "Soin":
+      bonus += 10
+      break
+    case talents.indexOf("calcul_mental") !== -1 && (skillName === "Jeu" || skillName === "Orientation"):
+      bonus += 10
+      break
+    case talents.indexOf("savoir_faire_nain") !== -1 && skillName === "Métier" && specialite !== null && ["arquebusier", "brasseur", "cristallier", "fabriquant d'armes", "fabriquant d'armures", "forgeron", "maçon", "mineur"].indexOf(specialite) !== -1:
+      bonus += 10
+      break
+    case talents.indexOf("talent_artistique") !== -1 && skillName === "Métier" && specialite === "artiste":
+      bonus += 20
+      break
+    default:
+  }
+  return bonus
 }

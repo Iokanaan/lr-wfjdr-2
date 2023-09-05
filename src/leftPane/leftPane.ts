@@ -1,4 +1,4 @@
-import { signals, totalEncombrement } from "../globals"
+import { signals, talents, totalEncombrement } from "../globals"
 import { switchCarrier } from "../help/carriers"
 import { computed, signal } from "../utils/utils"
 
@@ -14,7 +14,7 @@ export const checkEncombrement = function(sheet: Sheet) {
     }, [signals['F']])
 
     computed(function() {
-        encValCmp.text(totalEncombrement().toString())
+        encValCmp.text(Math.ceil(totalEncombrement()).toString())
     }, [totalEncombrement])
 
     // Adaptation des couleurs en fonction de l'encombrement
@@ -29,10 +29,20 @@ export const checkEncombrement = function(sheet: Sheet) {
             encMaxCmp.removeClass("text-danger")
         }
     }, [encMax, totalEncombrement])
-    encValCmp.on("update", function(cmp: Component<number>) {encVal.set(cmp.value()) })
+
 }
 
 export const setSleepListener = function(sheet: Sheet) {
+
+    // Comme on a besoin de la fortune max pour le sommeil, on déclare le computed ici
+    const maxFortune = computed(function() {
+        let max = signals["PD"]()
+        if(talents().indexOf("chance") !== -1) {
+            max++
+        }
+        sheet.get("max_fortune").text(" / " + max)
+    }, [signals["PD"], talents])
+
     // Click sur le bouton sommeil
     sheet.get("sleep").on("click", function() {
 
@@ -43,7 +53,7 @@ export const setSleepListener = function(sheet: Sheet) {
         }
 
         // On restaure les points de fortune
-        sheet.get("fortune_actuel").value(sheet.get("PD").value())
+        sheet.get("fortune_actuel").value(maxFortune())
     })
 }
 

@@ -46,11 +46,16 @@ export const rollMagic = function(sheet: Sheet<unknown>, title: string, nDice: n
     tags.push("magic")
     tags.push("target_" + intToWord(target))
     tags.push("sheet_" + intToWord(sheet.getSheetId()))
-    if(tags.indexOf("vulgaire") !== -1) {
-        nDice + 1
+    
+    if(tags.indexOf("vulgaire") !== -1 || tags.indexOf("noire") !== -1) {
+        nDice++
+    }
+    let diceExpression = nDice + "d10"
+    if(tags.indexOf("noire") !== -1) {
+        diceExpression = "keeph(" + diceExpression + ", " + (nDice - 1) + ")"
     }
     new RollBuilder(sheet)
-    .expression("(" + nDice + "d10)[" + tags.join(',') + "]")
+    .expression("(" + diceExpression + ")[" + tags.join(',') + "]")
     .title(title)
     .roll()
 }
@@ -136,7 +141,8 @@ const parseTags = function(sheet: Sheet<unknown>, result: DiceResult): RollTags 
         'damageBonus': damageBonus,
         'isMagic': result.allTags.indexOf("magic") !== -1,
         'isVulgaire': result.allTags.indexOf("vulgaire") !== -1,
-        'isRune': result.allTags.indexOf("rune") !== -1
+        'isRune': result.allTags.indexOf("rune") !== -1,
+        'isNoire': result.allTags.indexOf("noire") !== -1
     }
 }
 
@@ -218,19 +224,26 @@ const handleDamage = function(sheet: Sheet<unknown>, result: DiceResult, rollTag
 const handleSpell = function(sheet: Sheet<unknown>, result: DiceResult, rollTags: RollTags) {
     
     // Si magie vulgaire, on retire un dé pour déterminer la somme
-    let nDices = result.all.length
-    if(rollTags.isVulgaire) {
-        nDices--
+    let nDice = result.all.length
+
+    if(rollTags.isNoire) {
+        nDice--
     }
+
     let total = 0
-    for(let i=0; i<nDices; i++) {
-        total += result.all[i].value
+    if(rollTags.isVulgaire) {
+        nDice--
+        for(let i=0; i<nDice; i++) {
+            total += result.all[i].value
+        }
+    } else {
+        total = result.total
     }
     sheet.get("result_label").text(total.toString())
 
     // On regarde si on a lancé que des 1, si oui échec critique
     let fumble = true
-    for(let i=0; i<nDices; i++) {
+    for(let i=0; i<nDice; i++) {
         fumble = fumble && result.all[i].value === 1
     }
     if(fumble) {

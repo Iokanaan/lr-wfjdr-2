@@ -17,6 +17,7 @@ export const setupItemViewEntry = function(entry: Component<Item>) {
         qte.set(cmp.value())
     })
 
+    // Gestion de la mise de côté de l'objet
     computed(function() {
         if(drop()) {
             entry.find("toggle_on").hide()

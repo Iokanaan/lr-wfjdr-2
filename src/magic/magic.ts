@@ -1,5 +1,6 @@
+import { advancedSkills, talents } from "../globals"
 import { rollMagic } from "../roll/rollHandler"
-import { computed, intToWord, signal } from "../utils/utils"
+import { computed, signal } from "../utils/utils"
 
 const magies = {} as Record<string, Record<string, Record<string, Spell>>>
 const typesMagie = Tables.get("types_magie")
@@ -20,7 +21,16 @@ typesMagie.each(function(type: DomaineMagie) {
     }
 })
 
-export const setupMagicViewEntry = function(entry: Component) {
+export const setupMagicViewEntry = function(entry: Component<SpellKnown>) {
+
+    const magieNoire = computed(function() {
+        return talents().indexOf("magie_noire") !== -1
+    }, [talents])
+
+    const magieVulgaire = computed(function() {
+        log(advancedSkills())
+        return talents().indexOf("magie_vulgaire") !== -1 && advancedSkills().indexOf("Langage mystique") === -1
+    }, [talents, advancedSkills])
 
     // Lancement du sort au click sur son nom
     entry.find("spell_label").on("click", function(component: Component<unknown>) {
@@ -37,12 +47,22 @@ export const setupMagicViewEntry = function(entry: Component) {
             castLevel = parseInt(entry.sheet().get("Mag").text()) as number
         }
 
+        const tags = []
+        if(magieNoire() && entry.value().main_category === "sombres_savoirs") {
+            tags.push("noire")
+        }
+        
+        log(magieVulgaire())
+        if(magieVulgaire() && entry.value().sub_category === "vulgaire") {
+            tags.push("vulgaire")
+        }
+
         // Lancer des dés
-        rollMagic(entry.sheet(), component.text(), castLevel, target, [])
+        rollMagic(entry.sheet(), component.text(), castLevel, target, tags)
     })
     
     // Affichage de la description du sort au click sur le livre
-    entry.find("magic_display").on("click", function(cmp: Component<unknown>) {
+    entry.find("magic_display").on("click", function() {
         const desc = entry.find("magic_desc_col")
         if(desc.visible()) {
             desc.hide()
@@ -66,7 +86,7 @@ export const setupMagicEditEntry = function(entry: Component) {
     const mainCategoryCmp = entry.find("main_category") as Component<string>
     const subCategoryCmp = entry.find("sub_category") as ChoiceComponent<string>
     const spellCmp = entry.find("spell_choice") as ChoiceComponent<string>
-    const spellDomainCmp = entry.find("spell_domain")
+    const spellDomainCmp = entry.find("spell_domain") as Component<string>
 
     const mainCategory = signal(mainCategoryCmp.value())
 

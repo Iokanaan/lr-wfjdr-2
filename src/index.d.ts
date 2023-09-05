@@ -17,7 +17,8 @@ declare global {
         damageBonus: number,
         isMagic: boolean,
         isVulgaire: boolean,
-        isRune: boolean
+        isRune: boolean,
+        isNoire: boolean
     }
     
 
@@ -222,7 +223,10 @@ declare global {
     }
 
     type SpellKnown = Spell & {
-        use_ingredient: boolean
+        spell_name: string,
+        use_ingredient: boolean,
+        main_category: string,
+        sub_category: string
     }
 
     interface Component<T = unkown > {

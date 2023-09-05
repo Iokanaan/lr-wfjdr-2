@@ -7,22 +7,24 @@ import { setupMagicEditEntry, setupMagicViewEntry } from "./magic/magic";
 import { setupRituelViewEntry } from "./magic/rituels";
 import { setupRuneEditEntry, setupRuneViewEntry } from "./magic/runes";
 import { rollResultHandler } from "./roll/rollHandler";
-import { setupBasicSkill, setupSkillEditEntry, setupSkillViewEntry } from "./skills/skills";
-import { setBStatListener, setBonuses, setStatListeners } from "./stats/stats";
-import { setupTalentEditEntry, setupTalentViewEntry } from "./talent/talent";
+import { onSkillDelete, setupBasicSkill, setupSkillEditEntry, setupSkillViewEntry } from "./skills/skills";
+import { setBStatListener, setBonuses, setPDStatListener, setStatListeners } from "./stats/stats";
+import { onTalentDelete, setupTalentEditEntry, setupTalentViewEntry } from "./talent/talent";
 import { cleanupRepeater, setupRepeater } from "./utils/repeaters";
 import { hideDescriptions } from "./utils/utils";
 import { setArmeImpro, setMunitionListener, setPugilat } from "./combat/weaponBasics";
 import { onWeaponDelete, setupWeaponEditEntry, setupWeaponViewEntry } from "./combat/weaponRepeater";
 import { onItemDelete, setupItemEditEntry, setupItemViewEntry } from "./items/items";
-import { onMunitionDelete, setupMunitionEditEntry, setupMunitionViewEntry } from "./combat/munitionRepeater";
+import { onMunitionDelete, setupBadMunitionListener, setupMunitionEditEntry, setupMunitionViewEntry } from "./combat/munitionRepeater";
 
 
 /*
-encombrement
-talents application
+gestion des talents
+malus des armures
+encombrement nain
+malus encombrement
+raccourcis dégats  / localisation
 Icones bizarre
-revue armure
 */
 
 
@@ -50,6 +52,7 @@ init = function(sheet: Sheet<any>) {
             })
             setBonuses(sheet)
             setBStatListener(sheet)
+            setPDStatListener(sheet)
         } catch(e) {
             log("Error initializing stats")
         }
@@ -58,14 +61,14 @@ init = function(sheet: Sheet<any>) {
             Tables.get("skills_basic").each(function(skill) {
                 setupBasicSkill(sheet, skill)
             })
-            setupRepeater(sheet.get("skill_repeater"), setupSkillEditEntry, setupSkillViewEntry, null)
+            setupRepeater(sheet.get("skill_repeater"), setupSkillEditEntry, setupSkillViewEntry, onSkillDelete)
         } catch(e) {
             log("Error initializing skills")
         }
 
         try {
             // Talents
-            setupRepeater(sheet.get("talent_repeater"), setupTalentEditEntry, setupTalentViewEntry, null)
+            setupRepeater(sheet.get("talent_repeater"), setupTalentEditEntry, setupTalentViewEntry, onTalentDelete)
             hideDescriptions(sheet.get("talent_repeater") as Component<Record<string, unknown>>, "talent_desc_col")
         
         } catch(e) {
@@ -74,9 +77,7 @@ init = function(sheet: Sheet<any>) {
 
         try {
             // Armes
-            if(sheet.get("munition_quality").value() === null) {
-                sheet.get("munition_quality").value("Moyenne")
-            }
+            setupBadMunitionListener(sheet)
             setupRepeater(sheet.get("weapons_repeater"), setupWeaponEditEntry, setupWeaponViewEntry, onWeaponDelete)
             setPugilat(sheet)
             setArmeImpro(sheet, "CC")
