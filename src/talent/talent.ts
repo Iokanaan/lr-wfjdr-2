@@ -1,4 +1,3 @@
-import { talents } from "../globals"
 import { computed, signal } from "../utils/utils"
 
 const talents_choices: Record<"maitrise" | "magie_commune" | "science_de_la_magie" | "sombre_savoir" | "inspiration_divine" | "magie_mineure", Record<string, string>> & Record<string, undefined | Record<string,string>> = {

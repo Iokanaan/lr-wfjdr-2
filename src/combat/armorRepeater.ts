@@ -1,10 +1,10 @@
 import { setupRepeater } from "../utils/repeaters"
 import { computed, signal } from "../utils/utils"
 
-const allArmors = signal({} as Record<string, Record<"Tête" | "Bras" | "Corps" | "Jambes", number>>)
+export const setupArmorRepeater = function(sheet: Sheet<unknown>, talents: Computed<string[]>, armorLevelByEntry: Signal<Record<string, ArmorLevel | null>>, encombrementRecord: Signal<Record<string, number>>) {
+    
+    const allArmors = signal({} as Record<string, Record<"Tête" | "Bras" | "Corps" | "Jambes", number>>)
 
-
-export const setupArmorRepeater = function(sheet: Sheet<unknown>, talents: Computed<string[]>, encombrementRecord: Signal<Record<string, number>>) {
     // Calcul de l'armure total
     computed(function() {
         const totalArmor = { "Tête": 0, "Bras": 0, "Corps": 0, "Jambes": 0 }
@@ -19,7 +19,7 @@ export const setupArmorRepeater = function(sheet: Sheet<unknown>, talents: Compu
     }, [allArmors])
 
     // Initialisation du repeater
-    setupRepeater(sheet.get("armor_repeater"), setupArmorEditEntry, setupArmorViewEntry(talents, encombrementRecord), onDelete(encombrementRecord))
+    setupRepeater(sheet.get("armor_repeater"), setupArmorEditEntry, setupArmorViewEntry(allArmors, talents, armorLevelByEntry, encombrementRecord), onDelete(allArmors, armorLevelByEntry, encombrementRecord))
     
 }
 
@@ -30,7 +30,7 @@ const setupArmorEditEntry = function(entry: Component<ArmorData>) {
 }
 
 // Ajout d'une pièce d'armure au total à sa création
-const setupArmorViewEntry = function(talents: Computed<string[]>, encombrementRecord: Signal<Record<string, number>>) {
+const setupArmorViewEntry = function(allArmors: Signal<Record<string, Record<"Tête" | "Bras" | "Corps" | "Jambes", number>>>, talents: Computed<string[]>, armorLevelByEntry: Signal<Record<string, ArmorLevel | null>>, encombrementRecord: Signal<Record<string, number>>) {
     return function(entry: Component<ArmorData>) {
 
         const drop = signal(entry.find("left_behind").value() as boolean)
@@ -48,6 +48,13 @@ const setupArmorViewEntry = function(talents: Computed<string[]>, encombrementRe
             encombrement[entry.id()] = drop() || talents().indexOf("robuste") !== -1 ? 0 : entry.value().enc_armure * getQualityCoeff(entry.value().qualite_armure)
             encombrementRecord.set(encombrement)
         }, [drop, talents])
+
+        // Gestion du niveau d'armure
+        computed(function() {
+            const armorLevels = armorLevelByEntry()
+            armorLevels[entry.id()] = drop() ? null : entry.value().type_armure
+            armorLevelByEntry.set(armorLevels)
+        }, [drop])
     
         // Gestion de la mise de côté de l'objet
         computed(function() {
@@ -95,7 +102,7 @@ const getQualityCoeff = function(quality: Quality) {
 }
 
 // Supression de la pièce d'armure au delete sur le repeater
-const onDelete = function(encombrementRecord: Signal<Record<string, number>>) {
+const onDelete = function(allArmors: Signal<Record<string, Record<"Tête" | "Bras" | "Corps" | "Jambes", number>>>, armorLevelByEntry: Signal<Record<string, ArmorLevel | null>>, encombrementRecord: Signal<Record<string, number>>) {
     return function(entryId: string) {
 
         // Gestion armure
@@ -107,6 +114,11 @@ const onDelete = function(encombrementRecord: Signal<Record<string, number>>) {
         const encombrement = encombrementRecord()
         delete encombrement[entryId]
         encombrementRecord.set(encombrement)
+
+        // Gestion du niveau d'armure
+        const armorLevels = armorLevelByEntry()
+        delete armorLevels[entryId]
+        armorLevelByEntry.set(armorLevels)
     }
 }
 

@@ -187,7 +187,8 @@ declare global {
         pts_armure?: number,
         couverture?: ("Tête" | "Bras" | "Corps" | "Jambes")[],
         enc_armure: number,
-        qualite_armure: Quality
+        qualite_armure: Quality,
+        type_armure: ArmorLevel
     }
 
     type DomaineObject = {
@@ -282,7 +283,7 @@ declare global {
     type RepeaterState = 'EDIT' | 'VIEW'
 
     type StatSignals = Record<"B" | "BF" | "BE" | "PD" | Stat, Computed<number>> & Record<"B_actuel", Signal<number>>
-
+    type ArmorLevel = "Cuir" | "Mailles" | "Plaques"
 } 
 
 export {}

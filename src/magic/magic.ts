@@ -20,45 +20,63 @@ typesMagie.each(function(type: DomaineMagie) {
     }
 })
 
-export const setupMagicViewEntry = function(advancedSkills: Computed<string[]>, talents: Computed<string[]>) {
+export const setupMagicViewEntry = function(advancedSkills: Computed<string[]>, armorLevel: Computed<ArmorLevel | null>, hasBouclier: Computed<boolean>, talents: Computed<string[]>) {
     return function(entry: Component<SpellKnown>) {
-
-        const magieNoire = computed(function() {
-            return talents().indexOf("magie_noire") !== -1
-        }, [talents])
-    
-        const magieVulgaire = computed(function() {
-            log(advancedSkills())
-            return talents().indexOf("magie_vulgaire") !== -1 && advancedSkills().indexOf("Langage mystique") === -1
-        }, [talents, advancedSkills])
     
         // Lancement du sort au click sur son nom
         entry.find("spell_label").on("click", function(component: Component<unknown>) {
             
-            // Définition de la difficulté, avec un ajustement si ingrédient
-            let target = entry.value().difficulte
-            if(entry.find("use_ingredient").value() === true) {
-                target -= entry.value().bonus_ingredient
-            }
-    
+            const tags = computed(function() {
+                const tags: string[] = []
+                if(talents().indexOf("magie_noire") !== -1) {
+                    tags.push("noire")
+                }
+                if(talents().indexOf("magie_vulgaire") !== -1 && advancedSkills().indexOf("Langage mystique") === -1) {
+                    tags.push("vulgaire")
+                }
+                return tags
+            }, [talents, advancedSkills])
+
+            const spellTarget = computed(function() {
+                // Définition de la difficulté, avec un ajustement si ingrédient ou armure
+                let target = entry.value().difficulte
+
+                let malus = hasBouclier() ? 1 : 0
+                switch(armorLevel()) {
+                    case "Plaques":
+                        malus = 5
+                        break
+                    case "Mailles":
+                        malus = 3
+                        break
+                    case "Cuir":
+                        malus = 1
+                        break
+                    default:
+                }
+                if(talents().indexOf("magie_de_bataille") !== -1) {
+                    malus = Math.max(malus + 3, 0)
+                }
+                
+                target += malus
+
+                if(entry.find("use_ingredient").value() === true) {
+                    target -= entry.value().bonus_ingredient
+                }
+
+                return target
+
+            }, [armorLevel, hasBouclier, talents])
+
+
             // Reprise du nombre de dés à lancer
             let castLevel = entry.sheet().get("cast_level").value() as number
             if(castLevel === null) {
                 castLevel = parseInt(entry.sheet().get("Mag").text()) as number
             }
-    
-            const tags = []
-            if(magieNoire() && entry.value().main_category === "sombres_savoirs") {
-                tags.push("noire")
-            }
-            
-            log(magieVulgaire())
-            if(magieVulgaire() && entry.value().sub_category === "vulgaire") {
-                tags.push("vulgaire")
-            }
-    
+        
             // Lancer des dés
-            rollMagic(entry.sheet(), component.text(), castLevel, target, tags)
+            rollMagic(entry.sheet(), component.text(), castLevel, spellTarget(), tags())
         })
         
         // Affichage de la description du sort au click sur le livre

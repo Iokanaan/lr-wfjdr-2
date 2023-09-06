@@ -1,7 +1,7 @@
 import { roll } from "../roll/rollHandler"
 import { computed, intToWord, signal } from "../utils/utils"
 
-export const setupWeaponViewEntry = function(statSignals: StatSignals, talents: Computed<string[]>, encombrementRecord: Signal<Record<string, number>>) {
+export const setupWeaponViewEntry = function(statSignals: StatSignals, talents: Computed<string[]>, weaponsByEntry: Signal<Record<string, WeaponData | null>>, encombrementRecord: Signal<Record<string, number>>) {
     return function(entry: Component<WeaponData>) {
 
         sanitizeData(entry)
@@ -67,6 +67,11 @@ export const setupWeaponViewEntry = function(statSignals: StatSignals, talents: 
             const encombrement = encombrementRecord()
             encombrement[entry.id()] = drop() ? 0 : entry.value().encombrement * getQualityCoeff(entry.value().qualite)
             encombrementRecord.set(encombrement)
+        }, [drop])
+
+        computed(function() {
+            const weapons = weaponsByEntry()
+            weapons[entry.id()] = drop() ? null : entry.value()
         }, [drop])
     
         // Gestion de la mise de côté de l'objet
@@ -166,12 +171,16 @@ const getQualityCoeff = function(quality: Quality) {
 }
 
 
-export const onWeaponDelete = function(encombrementRecord: Signal<Record<string, number>>) {
+export const onWeaponDelete = function(weaponsByEntry: Signal<Record<string, WeaponData | null>>, encombrementRecord: Signal<Record<string, number>>) {
     return function(entryId: string) {
         // Gestion encombrement
         const encombrement = encombrementRecord()
         delete encombrement[entryId]
         encombrementRecord.set(encombrement)
+
+        const weapons = weaponsByEntry()
+        delete weapons[entryId]
+        weaponsByEntry.set(weapons)
     }
 }
 

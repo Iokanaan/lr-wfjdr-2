@@ -20,7 +20,6 @@ import { onMunitionDelete, setupBadMunitionListener, setupMunitionEditEntry, set
 
 /*
 gestion des talents
-malus des armures
 encombrement nain
 malus encombrement
 raccourcis dégats  / localisation
@@ -72,16 +71,41 @@ init = function(sheet: Sheet<any>) {
         const advancedSkillsByEntry: Signal<Record<string, SkillData>> = signal({})
         const advancedSkills = computed(function() {
             const talentSet: string[] = []
-            
             each(advancedSkillsByEntry(), function(skill) {
                 if(talentSet.indexOf(skill.nom_comp_label) === -1) {
                     talentSet.push(skill.nom_comp_label)
                 }
             })
-            log(talentSet)
             return talentSet
         }, [advancedSkillsByEntry])
+
+        const armorLevelByEntry: Signal<Record<string, ArmorLevel | null>> = signal({})
+        const armorLevel = computed(function(): ArmorLevel | null {
+            let maxArmor: (ArmorLevel | null)[] = [null]
+            each(armorLevelByEntry(), function(armorLevel) {
+                if(armorLevel === "Plaques") {
+                    maxArmor[0] = armorLevel
+                } else if(armorLevel === "Mailles" && maxArmor[0] !== "Plaques") {
+                    maxArmor[0] = armorLevel
+                } else if(armorLevel === "Cuir" && maxArmor[0] === null) {
+                    maxArmor[0] = armorLevel
+                } else {
+                    maxArmor[0] = armorLevel
+                }
+            })
+            return maxArmor[0]
+        }, [armorLevelByEntry])
         
+        const weaponsByEntry: Signal<Record<string, WeaponData>> = signal({})
+        const hasBouclier = computed(function() {
+            let bcl = [false]
+            each(weaponsByEntry(), function(weapon) {
+                if(weapon.attributs.indexOf("Bouclier") !== -1) {
+                    bcl[0] = true
+                }
+            })
+            return bcl[0]
+        },[weaponsByEntry])
 
         try {
             // Stats
@@ -99,14 +123,24 @@ init = function(sheet: Sheet<any>) {
             Tables.get("skills_basic").each(function(skill) {
                 setupBasicSkill(sheet, skill, statSignals, talents)
             })
-            setupRepeater(sheet.get("skill_repeater"), setupSkillEditEntry, setupSkillViewEntry(statSignals, advancedSkillsByEntry, talents), onSkillDelete(advancedSkillsByEntry))
+            setupRepeater(
+                sheet.get("skill_repeater"), 
+                setupSkillEditEntry, 
+                setupSkillViewEntry(statSignals, advancedSkillsByEntry, talents), 
+                onSkillDelete(advancedSkillsByEntry)
+                )
         } catch(e) {
             log("Error initializing skills")
         }
 
         try {
             // Talents
-            setupRepeater(sheet.get("talent_repeater"), setupTalentEditEntry, setupTalentViewEntry(talentsByEntry), onTalentDelete(talentsByEntry))
+            setupRepeater(
+                sheet.get("talent_repeater"), 
+                setupTalentEditEntry, 
+                setupTalentViewEntry(talentsByEntry), 
+                onTalentDelete(talentsByEntry)
+                )
             hideDescriptions(sheet.get("talent_repeater") as Component<Record<string, unknown>>, "talent_desc_col")
         
         } catch(e) {
@@ -116,7 +150,12 @@ init = function(sheet: Sheet<any>) {
         try {
             // Armes
             setupBadMunitionListener(sheet)
-            setupRepeater(sheet.get("weapons_repeater"), setupWeaponEditEntry, setupWeaponViewEntry(statSignals, talents, encombrementRecord), onWeaponDelete(encombrementRecord))
+            setupRepeater(
+                sheet.get("weapons_repeater"), 
+                setupWeaponEditEntry, 
+                setupWeaponViewEntry(statSignals, talents, weaponsByEntry, encombrementRecord), 
+                onWeaponDelete(weaponsByEntry, encombrementRecord)
+                )
             setPugilat(sheet, statSignals)
             setArmeImpro(sheet, "CC", statSignals)
             setArmeImpro(sheet, "CT", statSignals)
@@ -125,14 +164,19 @@ init = function(sheet: Sheet<any>) {
             log("Error initializing weapons")
         }
         try {
-            setupRepeater(sheet.get("munition_repeater"), setupMunitionEditEntry, setupMunitionViewEntry(encombrementRecord), onMunitionDelete(encombrementRecord))
+            setupRepeater(
+                sheet.get("munition_repeater"), 
+                setupMunitionEditEntry, 
+                setupMunitionViewEntry(encombrementRecord), 
+                onMunitionDelete(encombrementRecord)
+                )
         } catch(e) {
             log("Error initializing munitions")
         }
 
         try {
             // Armure
-            setupArmorRepeater(sheet, talents, encombrementRecord)
+            setupArmorRepeater(sheet, talents, armorLevelByEntry, encombrementRecord)
             sheet.get("BE_reminder").text("BE : " + sheet.get("BE").text())
         } catch(e) {
             log("Error initializing armors")
@@ -152,13 +196,32 @@ init = function(sheet: Sheet<any>) {
 
         try {
             //Magie
-            setupRepeater(sheet.get("magic_repeater"), setupMagicEditEntry, setupMagicViewEntry(advancedSkills, talents), null)
-            hideDescriptions(sheet.get("magic_repeater") as Component<Record<string, unknown>> , "magic_desc_col")
-            setupRepeater(sheet.get("rune_repeater"), setupRuneEditEntry("runes"), setupRuneViewEntry, null)
-            setupRepeater(sheet.get("rune_majeur_repeater"), setupRuneEditEntry("runes_majeures"), setupRuneViewEntry, null)
-            hideDescriptions(sheet.get("rune_repeater") as Component<Record<string, unknown>>, "desc_col")
-            hideDescriptions(sheet.get("rune_majeur_repeater") as Component<Record<string, unknown>>, "desc_col")
-            setupRepeater(sheet.get("rituel_repeater") , null, setupRituelViewEntry, null)
+            const magicRepeater = sheet.get("magic_repeater") as Component<Record<string, unknown>>
+            const runeRepeater = sheet.get("runes_repeater") as Component<Record<string, unknown>>
+            const runeMajRepeater = sheet.get("rune_majeur_repeater") as Component<Record<string, unknown>>
+            const rituelRepeater = sheet.get("rituel_repeater") as Component<Record<string, unknown>>
+            setupRepeater(
+                magicRepeater,
+                setupMagicEditEntry,
+                setupMagicViewEntry(advancedSkills, armorLevel, hasBouclier, talents), 
+                null
+                )
+            hideDescriptions(magicRepeater, "magic_desc_col")
+            setupRepeater(
+                sheet.get("rune_repeater"),
+                setupRuneEditEntry("runes"),
+                setupRuneViewEntry,
+                null
+                )
+            setupRepeater(
+                runeMajRepeater,
+                setupRuneEditEntry("runes_majeures"),
+                setupRuneViewEntry,
+                null
+                )
+            hideDescriptions(runeRepeater, "desc_col")
+            hideDescriptions(runeMajRepeater, "desc_col")
+            setupRepeater(rituelRepeater , null, setupRituelViewEntry(talents), null)
         } catch(e) {
             log("Error initializing magic")
         }
