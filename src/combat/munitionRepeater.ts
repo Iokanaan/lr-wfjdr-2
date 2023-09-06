@@ -78,20 +78,20 @@ export const setupBadMunitionListener = function(sheet: Sheet) {
 
     computed(function() {
         if(badMunitions()) {
-            sheet.get("toggle_on_munitions").hide()
-            sheet.get("toggle_off_munitions").show()
-        } else {
             sheet.get("toggle_on_munitions").show()
             sheet.get("toggle_off_munitions").hide()
+        } else {
+            sheet.get("toggle_on_munitions").hide()
+            sheet.get("toggle_off_munitions").show()
         }
     }, [badMunitions])
 
     sheet.get("toggle_on_munitions").on("click", function() {
-        sheet.get("bad_munition").value(true)
+        sheet.get("bad_munition").value(false)
     })
 
     sheet.get("toggle_off_munitions").on("click", function() {
-        sheet.get("bad_munition").value(false)
+        sheet.get("bad_munition").value(true)
     })
 
     sheet.get("bad_munition").on("update", function(cmp) {

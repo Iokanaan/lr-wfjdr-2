@@ -7,7 +7,7 @@ export const setupBasicSkill = function(sheet: Sheet, skill: SkillBasicEntity, s
 
 export const setupSkillViewEntry = function(statSignals: StatSignals, advancedSkillsByEntry: Signal<Record<string, SkillEntryData>>, talents: Computed<string[]>) {
   return function(entry: Component<SkillEntryData>) {
-    setupSkill(entry.find, "av", entry.value().comp_stat, entry.value().nom, entry.value().specialite, statSignals, talents)
+    setupSkill(entry.find, "av", entry.value().comp_stat, entry.value().nom_comp, entry.value().specialite, statSignals, talents)
   
     const allAdvancedSkills = advancedSkillsByEntry()
     allAdvancedSkills[entry.id()] = entry.value()
@@ -149,39 +149,32 @@ const setupSkill = function(get: (id: string) => Component, skillCmpId: string, 
   })
 }
 
+
 const getTalentBonus = function(skillName: string, specialite: string | null, talents: string[]) {
   let bonus = 0
   switch(true) {
     case talents.indexOf("acrobatie_equestre") !== -1 && skillName === "Équitation":
-      log("Application acrobatie_equestre")
       bonus += 10
       break
     case talents.indexOf("dur_en_affaires") !== -1 && (skillName === "Évaluation" || skillName === "Marchandage"):
-      log("Application dur_en_affaires")
       bonus += 10
       break
     case talents.indexOf("grand_voyageur") !== -1 && (skillName === "connaissances_generales" || skillName === "langue"):
-      log("Application grand_voyageur")
       bonus += 10
       break
     case talents.indexOf("harmonie_aetherique") !== -1 && (skillName === "focalisation" || skillName === "sens_de_la_magie"):
-      log("Application harmonie_aetherique")
       bonus += 10
       break
     case talents.indexOf("linguistique") !== -1 && (skillName === "lire_ecrire" || skillName === "langue"):
-      log("Application linguistique")
       bonus += 10
       break
     case talents.indexOf("menacant") !== -1 && (skillName === "Intimidation" || skillName === "torture"):
-      log("Application menacant")
       bonus += 10
       break
     case talents.indexOf("sens_aguises") !== -1 && skillName === "Perception":
-      log("Application sens_aguises")
       bonus += 20
       break
     case talents.indexOf("sens_de_l_orientation") !== -1 && skillName === "orientation":
-      log("Application sens_de_l_orientation")
       bonus += 10
       break
     case talents.indexOf("chirurgie") !== -1 && skillName === "Soin":
@@ -190,10 +183,10 @@ const getTalentBonus = function(skillName: string, specialite: string | null, ta
     case talents.indexOf("calcul_mental") !== -1 && (skillName === "Jeu" || skillName === "Orientation"):
       bonus += 10
       break
-    case talents.indexOf("savoir_faire_nain") !== -1 && skillName === "Métier" && specialite !== null && ["arquebusier", "brasseur", "cristallier", "fabriquant d'armes", "fabriquant d'armures", "forgeron", "maçon", "mineur"].indexOf(specialite) !== -1:
+    case talents.indexOf("savoir_faire_nain") !== -1 && skillName === "metier" && specialite !== null && ["arquebusier", "brasseur", "cristallier", "fabriquant d'armes", "fabriquant d'armures", "forgeron", "maçon", "mineur"].indexOf(specialite) !== -1:
       bonus += 10
       break
-    case talents.indexOf("talent_artistique") !== -1 && skillName === "Métier" && specialite === "artiste":
+    case talents.indexOf("talent_artistique") !== -1 && skillName === "metier" && specialite === "artiste":
       bonus += 20
       break
     default:

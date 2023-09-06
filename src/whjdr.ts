@@ -8,7 +8,7 @@ import { setupRituelViewEntry } from "./magic/rituels";
 import { setupRuneEditEntry, setupRuneViewEntry } from "./magic/runes";
 import { rollResultHandler } from "./roll/rollHandler";
 import { onSkillDelete, setupBasicSkill, setupSkillEditEntry, setupSkillViewEntry } from "./skills/skills";
-import { setBStatListener, setBonuses, setPDStatListener, setStatListeners } from "./stats/stats";
+import { setBStatListener, setBonuses, setMagSignal, setPDStatListener, setStatListeners } from "./stats/stats";
 import { onTalentDelete, setupTalentEditEntry, setupTalentViewEntry } from "./talent/talent";
 import { cleanupRepeater, setupRepeater } from "./utils/repeaters";
 import { computed, hideDescriptions, signal } from "./utils/utils";
@@ -19,12 +19,13 @@ import { onMunitionDelete, setupBadMunitionListener, setupMunitionEditEntry, set
 
 
 /*
-encombrement nain
-malus encombrement
-malus Ag
+malus encombrement sur mvt
 raccourcis dégats  / localisation
 Icones bizarre
 Gestion parade / esquive / bouclier
+bug talents
+affichage malus armure 
+affichage niveau d'armure
 */
 
 
@@ -84,27 +85,23 @@ init = function(sheet: Sheet<any>) {
         const armorLevel = computed(function(): ArmorLevel | null {
             let maxArmor: (ArmorLevel | null)[] = [null]
             each(armorLevelByEntry(), function(armorLevel) {
-                log("curr max" + maxArmor[0])
+                log(armorLevel)
                 if(armorLevel === "Plaques") {
                     maxArmor[0] = armorLevel
-                    log("set armor Plaques")
                 } else if(armorLevel === "Mailles" && maxArmor[0] !== "Plaques") {
                     maxArmor[0] = armorLevel
-                    log("set armor Mailles")
                 } else if(armorLevel === "Cuir" && maxArmor[0] === null) {
                     maxArmor[0] = armorLevel
-                    log("set armor Cuir")
                 }
             })
-            log(maxArmor)
             return maxArmor[0]
         }, [armorLevelByEntry])
         
-        const weaponsByEntry: Signal<Record<string, WeaponData>> = signal({})
+        const weaponsByEntry: Signal<Record<string, WeaponData | null>> = signal({})
         const hasBouclier = computed(function() {
             let bcl = [false]
             each(weaponsByEntry(), function(weapon) {
-                if(weapon.attributs.indexOf("Bouclier") !== -1) {
+                if(weapon !== null && weapon.attributs !== null && weapon.attributs.indexOf("Bouclier") !== -1) {
                     bcl[0] = true
                 }
             })
@@ -114,9 +111,10 @@ init = function(sheet: Sheet<any>) {
         try {
             // Stats
             Tables.get("stats").each(function(stat: StatObject) {
-                setStatListeners(sheet, stat.id, statSignals)
+                setStatListeners(sheet, stat.id, statSignals, armorLevel)
             })
             setBonuses(sheet, statSignals)
+            setMagSignal(sheet, statSignals)
             setBStatListener(sheet, statSignals)
             setPDStatListener(sheet, statSignals)
         } catch(e) {
@@ -188,10 +186,10 @@ init = function(sheet: Sheet<any>) {
 
         try {
             // Volet gauche
-            sheet.get("name").text(sheet.properName())
-            checkEncombrement(sheet, statSignals, totalEncombrement)
+            const raceSignal = signal(sheet.get("custom_race").value() as string)
+            checkEncombrement(sheet, statSignals, raceSignal, totalEncombrement)
             setSleepListener(sheet, statSignals, talents)
-            setRaceEditor(sheet)
+            setRaceEditor(sheet, raceSignal)
             setClassEditor(sheet)
             setInitiativeListener(sheet)
             setBlessuresListener(sheet, statSignals)
@@ -226,7 +224,12 @@ init = function(sheet: Sheet<any>) {
                 )
             hideDescriptions(runeRepeater, "desc_col")
             hideDescriptions(runeMajRepeater, "desc_col")
-            setupRepeater(rituelRepeater , null, setupRituelViewEntry(talents), null)
+            setupRepeater(
+                rituelRepeater, 
+                null, 
+                setupRituelViewEntry(statSignals, armorLevel, hasBouclier, talents), 
+                null
+                )
         } catch(e) {
             log("Error initializing magic")
         }

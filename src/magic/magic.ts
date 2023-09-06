@@ -25,7 +25,6 @@ export const setupMagicViewEntry = function(advancedSkills: Computed<string[]>, 
 
         const tags = computed(function() {
             const tags: string[] = []
-            log(entry.value())
             if(talents().indexOf("magie_noire") !== -1 && entry.value().main_category === "sombres_savoirs") {
                 tags.push("noire")
             }
@@ -36,21 +35,24 @@ export const setupMagicViewEntry = function(advancedSkills: Computed<string[]>, 
         }, [talents, advancedSkills])
         
         const malus = computed(function() {
-            let malus = hasBouclier() ? 1 : 0
+            let malus = 0
             switch(armorLevel()) {
                 case "Plaques":
-                    malus = 5
+                    malus += 5
                     break
                 case "Mailles":
-                    malus = 3
+                    malus += 3
                     break
                 case "Cuir":
-                    malus = 1
+                    malus += 1
                     break
                 default:
             }
+            if(hasBouclier()) {
+                malus++
+            }
             if(talents().indexOf("incantation_de_bataille") !== -1) {
-                malus = Math.max(malus + 3, 0)
+                malus = Math.max(malus - 3, 0)
             }
             return malus
         }, [armorLevel, hasBouclier, talents]) 

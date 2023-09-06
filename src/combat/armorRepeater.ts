@@ -54,9 +54,6 @@ const setupArmorViewEntry = function(allArmors: Signal<Record<string, Record<"T�
             const armorLevels = armorLevelByEntry()
             armorLevels[entry.id()] = drop() ? null : entry.value().type_armure
             armorLevelByEntry.set(armorLevels)
-            log("armor level")
-            log(armorLevelByEntry())
-            log(drop())
         }, [drop])
     
         // Gestion de la mise de côté de l'objet

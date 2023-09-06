@@ -1,16 +1,20 @@
 import { switchCarrier } from "../help/carriers"
 import { computed, signal } from "../utils/utils"
 
-export const checkEncombrement = function(sheet: Sheet, statSignals: StatSignals, totalEncombrement: Computed<number>) {
+export const checkEncombrement = function(sheet: Sheet, statSignals: StatSignals, raceSignal: Signal<string>, totalEncombrement: Computed<number>) {
     
     const encMaxCmp = sheet.get("max_encombrement")
     const encValCmp = sheet.get("encombrement_total")
-    
+
     // Calcul de l'encombrement max en fonction de la force
     const encMax = computed(function() {
-        sheet.get("max_encombrement").text(" / " + (statSignals['F']() * 10).toString())
-        return statSignals['F']() * 10
-    }, [statSignals['F']])
+        let multiplateur = 10
+        if(raceSignal() === "Nain") {
+            multiplateur = 20
+        }
+        sheet.get("max_encombrement").text(" / " + (statSignals['F']() * multiplateur).toString())
+        return statSignals['F']() * multiplateur
+    }, [statSignals['F'], raceSignal])
 
     computed(function() {
         encValCmp.text(Math.ceil(totalEncombrement()).toString())
@@ -56,7 +60,7 @@ export const setSleepListener = function(sheet: Sheet, statSignals: StatSignals,
     })
 }
 
-export const setRaceEditor = function(sheet: Sheet) {
+export const setRaceEditor = function(sheet: Sheet, raceSignal: Signal<string>) {
 
     const raceCmp = sheet.get("race")
     const raceTextCmp = sheet.get("race_txt")
@@ -88,6 +92,7 @@ export const setRaceEditor = function(sheet: Sheet) {
         customRaceCmp.hide()
         raceTextCmp.text(cmp.value())
         raceTextCmp.show()
+        raceSignal.set(cmp.value())
     })
 
     

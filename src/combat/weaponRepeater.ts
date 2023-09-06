@@ -72,6 +72,7 @@ export const setupWeaponViewEntry = function(statSignals: StatSignals, talents: 
         computed(function() {
             const weapons = weaponsByEntry()
             weapons[entry.id()] = drop() ? null : entry.value()
+            weaponsByEntry.set(weapons)
         }, [drop])
     
         // Gestion de la mise de côté de l'objet

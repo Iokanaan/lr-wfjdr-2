@@ -2,12 +2,23 @@ import { roll } from "../roll/rollHandler"
 import { computed, signal } from "../utils/utils"
 
 
-export function setStatListeners(sheet: Sheet, stat: Stat, statSignals: StatSignals) {
+export function setStatListeners(sheet: Sheet, stat: Stat, statSignals: StatSignals, armorLevel: Computed<ArmorLevel | null>) {
 
     const base = signal(sheet.get(stat + "_base").value() as number);
     const av = signal(sheet.get(stat + "_av").value() as number);
-    statSignals[stat] = computed(function() { return base() + av() }, [base, av]);
-    
+    if(stat !== 'Ag') {
+        statSignals[stat] = computed(function() { return base() + av() }, [base, av]);
+    } else {
+        statSignals[stat] = computed(function() {
+            if(armorLevel() === "Mailles" || armorLevel() === "Plaques") {
+                sheet.get(stat).addClass("text-danger")
+                sheet.get(stat).text((base() + av() - 10).toString())
+                return base() + av() - 10
+            }
+            sheet.get(stat).removeClass("text-danger")
+            sheet.get(stat).text((base() + av()).toString())
+            return base() + av()  }, [base, av, armorLevel]);
+    }
     sheet.get(stat + '_base').on('update', function(cmp: Component) { 
         base.set(cmp.value()) 
     })
@@ -31,8 +42,19 @@ export function setBonuses(sheet: Sheet, statSignals: StatSignals) {
         const value = Math.floor((statSignals['F']()) / 10) 
         sheet.get("BF").value(value)
         return value
-    }, [statSignals['F']] )
-    
+    }, [statSignals['F']] )   
+}
+
+export function setMagSignal(sheet: Sheet, statSignals: StatSignals) {
+    const base = signal(sheet.get("Mag_base").value() as number)
+    const av = signal(sheet.get("Mag_av").value() as number)
+    statSignals["Mag"] = computed(function() { return base() + av() }, [base, av])
+    sheet.get('Mag_base').on('update', function(cmp: Component) { 
+        base.set(cmp.value()) 
+    })
+    sheet.get('Mag_av').on('update', function(cmp: Component) { 
+        av.set(cmp.value()) 
+    }) 
 }
 
 export function setBStatListener(sheet: Sheet, statSignals: StatSignals) {

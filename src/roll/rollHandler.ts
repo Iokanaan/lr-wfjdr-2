@@ -31,8 +31,12 @@ export const rollResultHandler = function(result: DiceResult, callback: DiceResu
     })
 }
 
-export const roll = function(sheet: Sheet<unknown>, title: string, target: number, tags: string[]) {
+export const roll = function(sheet: Sheet<unknown>, title: string, target: number, t: string[]) {
     // Transmission de la valeur cible et la feuille dans les tags
+    const tags = []
+    for(let i=0; i<t.length; i++) {
+        tags.push(t[i])
+    }
     tags.push("target_" + intToWord(target))
     tags.push("sheet_" + intToWord(sheet.getSheetId()))
     new RollBuilder(sheet)
@@ -41,12 +45,17 @@ export const roll = function(sheet: Sheet<unknown>, title: string, target: numbe
         .roll()
 }
 
-export const rollMagic = function(sheet: Sheet<unknown>, title: string, nDice: number, target: number, tags: string[]) {
+export const rollMagic = function(sheet: Sheet<unknown>, title: string, nDice: number, target: number, t: string[]) {
     // Transmission de la valeur cible et la feuille dans les tags, ajout tu tag "magic"
+    const tags = []
+    for(let i=0; i<t.length; i++) {
+        tags.push(t[i])
+    }
     tags.push("magic")
     tags.push("target_" + intToWord(target))
+    log(tags)
     tags.push("sheet_" + intToWord(sheet.getSheetId()))
-    
+    log("target dans roll" + target)
     if(tags.indexOf("vulgaire") !== -1 || tags.indexOf("noire") !== -1) {
         nDice++
     }
@@ -54,14 +63,20 @@ export const rollMagic = function(sheet: Sheet<unknown>, title: string, nDice: n
     if(tags.indexOf("noire") !== -1) {
         diceExpression = "keeph(" + diceExpression + ", " + (nDice - 1) + ")"
     }
+    log(intToWord(target))
+    log(tags.join(','));
     new RollBuilder(sheet)
     .expression("(" + diceExpression + ")[" + tags.join(',') + "]")
     .title(title)
     .roll()
 }
 
-const rollDamage = function(sheet: Sheet<unknown>, title: string, nDice: number, damageBonus: number, tags: string[]) {
+const rollDamage = function(sheet: Sheet<unknown>, title: string, nDice: number, damageBonus: number, t: string[]) {
     // Transmission de la fiche
+    const tags = []
+    for(let i=0; i<t.length; i++) {
+        tags.push(t[i])
+    }
     tags.push("sheet_" + intToWord(sheet.getSheetId()))
     new RollBuilder(sheet)
         // Jets en keeph pour prendre en compte l'attribut percutant
@@ -70,8 +85,12 @@ const rollDamage = function(sheet: Sheet<unknown>, title: string, nDice: number,
         .roll()
 }
 
-const rollCrit = function(sheet: Sheet<unknown>, title: string, nDice: number, damageBonus: number, tags: string[]) {
+const rollCrit = function(sheet: Sheet<unknown>, title: string, nDice: number, damageBonus: number, t: string[]) {
     // Comme damage, mais explosif
+    const tags = []
+    for(let i=0; i<t.length; i++) {
+        tags.push(t[i])
+    }
     tags.push("sheet_" + intToWord(sheet.getSheetId()))
     tags.push("crit")
     const tags_str = tags.length != 0 ? "[" + tags.join(',') + "]" : ""
