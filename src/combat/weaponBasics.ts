@@ -1,17 +1,16 @@
-import { signals } from "../globals"
 import { roll } from "../roll/rollHandler"
 import { intToWord } from "../utils/utils"
 
-export const setPugilat = function(sheet: Sheet<CharData>) {
+export const setPugilat = function(sheet: Sheet<CharData>, statSignals: StatSignals) {
     sheet.get("pugilat").on("click", function() {
         const damageBonus = parseInt(sheet.get("BF").text()) - 4
-        roll(sheet, "Pugilat", signals["CC"](), ["attack", "pugilat", "damage_" + intToWord(damageBonus)])
+        roll(sheet, "Pugilat", statSignals["CC"](), ["attack", "pugilat", "damage_" + intToWord(damageBonus)])
     })
 }
 
-export const setArmeImpro = function(sheet: Sheet<CharData>, stat: Stat) {
+export const setArmeImpro = function(sheet: Sheet<CharData>, stat: Stat, statSignals: StatSignals) {
     sheet.get("improvise_" + stat).on("click", function() {
-        const damageBonus = signals["BF"]() - 4
+        const damageBonus = statSignals["BF"]() - 4
         roll(sheet, "Arme improvisée", parseInt(sheet.get(stat).text()), ["attack", "damage_" + intToWord(damageBonus)])
     })
 }

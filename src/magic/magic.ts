@@ -1,4 +1,3 @@
-import { advancedSkills, talents } from "../globals"
 import { rollMagic } from "../roll/rollHandler"
 import { computed, signal } from "../utils/utils"
 
@@ -21,63 +20,65 @@ typesMagie.each(function(type: DomaineMagie) {
     }
 })
 
-export const setupMagicViewEntry = function(entry: Component<SpellKnown>) {
+export const setupMagicViewEntry = function(advancedSkills: Computed<string[]>, talents: Computed<string[]>) {
+    return function(entry: Component<SpellKnown>) {
 
-    const magieNoire = computed(function() {
-        return talents().indexOf("magie_noire") !== -1
-    }, [talents])
-
-    const magieVulgaire = computed(function() {
-        log(advancedSkills())
-        return talents().indexOf("magie_vulgaire") !== -1 && advancedSkills().indexOf("Langage mystique") === -1
-    }, [talents, advancedSkills])
-
-    // Lancement du sort au click sur son nom
-    entry.find("spell_label").on("click", function(component: Component<unknown>) {
-        
-        // Définition de la difficulté, avec un ajustement si ingrédient
-        let target = entry.value().difficulte
-        if(entry.find("use_ingredient").value() === true) {
-            target -= entry.value().bonus_ingredient
-        }
-
-        // Reprise du nombre de dés à lancer
-        let castLevel = entry.sheet().get("cast_level").value() as number
-        if(castLevel === null) {
-            castLevel = parseInt(entry.sheet().get("Mag").text()) as number
-        }
-
-        const tags = []
-        if(magieNoire() && entry.value().main_category === "sombres_savoirs") {
-            tags.push("noire")
-        }
-        
-        log(magieVulgaire())
-        if(magieVulgaire() && entry.value().sub_category === "vulgaire") {
-            tags.push("vulgaire")
-        }
-
-        // Lancer des dés
-        rollMagic(entry.sheet(), component.text(), castLevel, target, tags)
-    })
+        const magieNoire = computed(function() {
+            return talents().indexOf("magie_noire") !== -1
+        }, [talents])
     
-    // Affichage de la description du sort au click sur le livre
-    entry.find("magic_display").on("click", function() {
-        const desc = entry.find("magic_desc_col")
-        if(desc.visible()) {
-            desc.hide()
-        } else {
-            desc.show()
-        }
-    })
-
-    // Gestion du Binding
-    Bindings.add(entry.value().spell_name, "bind_spell", "MagieDisplay", function() {
-        return entry.value()
-    })
-    entry.find("bind_spell").on("click", function() {
-        Bindings.send(entry.sheet(), entry.value().spell_name)
-    })
+        const magieVulgaire = computed(function() {
+            log(advancedSkills())
+            return talents().indexOf("magie_vulgaire") !== -1 && advancedSkills().indexOf("Langage mystique") === -1
+        }, [talents, advancedSkills])
+    
+        // Lancement du sort au click sur son nom
+        entry.find("spell_label").on("click", function(component: Component<unknown>) {
+            
+            // Définition de la difficulté, avec un ajustement si ingrédient
+            let target = entry.value().difficulte
+            if(entry.find("use_ingredient").value() === true) {
+                target -= entry.value().bonus_ingredient
+            }
+    
+            // Reprise du nombre de dés à lancer
+            let castLevel = entry.sheet().get("cast_level").value() as number
+            if(castLevel === null) {
+                castLevel = parseInt(entry.sheet().get("Mag").text()) as number
+            }
+    
+            const tags = []
+            if(magieNoire() && entry.value().main_category === "sombres_savoirs") {
+                tags.push("noire")
+            }
+            
+            log(magieVulgaire())
+            if(magieVulgaire() && entry.value().sub_category === "vulgaire") {
+                tags.push("vulgaire")
+            }
+    
+            // Lancer des dés
+            rollMagic(entry.sheet(), component.text(), castLevel, target, tags)
+        })
+        
+        // Affichage de la description du sort au click sur le livre
+        entry.find("magic_display").on("click", function() {
+            const desc = entry.find("magic_desc_col")
+            if(desc.visible()) {
+                desc.hide()
+            } else {
+                desc.show()
+            }
+        })
+    
+        // Gestion du Binding
+        Bindings.add(entry.value().spell_name, "bind_spell", "MagieDisplay", function() {
+            return entry.value()
+        })
+        entry.find("bind_spell").on("click", function() {
+            Bindings.send(entry.sheet(), entry.value().spell_name)
+        })
+    }
 }
 
 

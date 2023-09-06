@@ -1,105 +1,106 @@
-import { encombrementRecord, signals, talents } from "../globals"
 import { roll } from "../roll/rollHandler"
 import { computed, intToWord, signal } from "../utils/utils"
 
-export const setupWeaponViewEntry = function(entry: Component<WeaponData>) {
+export const setupWeaponViewEntry = function(statSignals: StatSignals, talents: Computed<string[]>, encombrementRecord: Signal<Record<string, number>>) {
+    return function(entry: Component<WeaponData>) {
 
-    sanitizeData(entry)
-
-    const drop = signal(entry.find("left_behind").value() as boolean)
-
-    // Set du bonus de dégâts
-    const damageBonus = computed(function() {
-        let damage = entry.value().bonus_bf ? entry.value().degats + (signals["BF"]()) : entry.value().degats
-        if(talents().indexOf("coups_puissants") !== -1 && entry.value().type_arme === "1") {
-            return damage + 1
-        }
-        if(talents().indexOf("tir_en_puissance") !== -1 && entry.value().type_arme === "2") {
-            return damage + 1
-        }
-        return damage
-    }, [signals["BF"], talents])
-
-    // Jet d'attaque
-    entry.find("weapon_name").on("click", function(cmp: Component) {
-        if(!drop()) {
-            const targetStat = entry.value().type_arme === "1" ? "CC" : "CT"
-            let target = signals[targetStat]()
-
-            // Gestion du bonus de qualité
-            if(entry.value().qualite === "Exceptionnelle") {
-                target += 5
+        sanitizeData(entry)
+    
+        const drop = signal(entry.find("left_behind").value() as boolean)
+    
+        // Set du bonus de dégâts
+        const damageBonus = computed(function() {
+            let damage = entry.value().bonus_bf ? entry.value().degats + (statSignals["BF"]()) : entry.value().degats
+            if(talents().indexOf("coups_puissants") !== -1 && entry.value().type_arme === "1") {
+                return damage + 1
             }
-            if(entry.value().qualite === "Médiocre") {
-                target -= 5
+            if(talents().indexOf("tir_en_puissance") !== -1 && entry.value().type_arme === "2") {
+                return damage + 1
             }
-
-            // Gestion du malus de qualité de munition
-            const munitionsMediocre = entry.sheet().get("bad_munition").value()
-            if(entry.value().type_arme === "2" && munitionsMediocre && entry.value().type_munition !== "0") {
-                target -= 5
+            return damage
+        }, [statSignals["BF"], talents])
+    
+        // Jet d'attaque
+        entry.find("weapon_name").on("click", function(cmp: Component) {
+            if(!drop()) {
+                const targetStat = entry.value().type_arme === "1" ? "CC" : "CT"
+                let target = statSignals[targetStat]()
+    
+                // Gestion du bonus de qualité
+                if(entry.value().qualite === "Exceptionnelle") {
+                    target += 5
+                }
+                if(entry.value().qualite === "Médiocre") {
+                    target -= 5
+                }
+    
+                // Gestion du malus de qualité de munition
+                const munitionsMediocre = entry.sheet().get("bad_munition").value()
+                if(entry.value().type_arme === "2" && munitionsMediocre && entry.value().type_munition !== "0") {
+                    target -= 5
+                }
+    
+                const tags = ["attack, damage_" + intToWord(damageBonus())]
+    
+                if(entry.value().attributs.indexOf("Percutante") !== -1) {
+                    tags.push("percutante")
+                }
+    
+                if(entry.value().attributs.indexOf("Épuisante") !== -1) {
+                    tags.push("epuisante")
+                }
+    
+                roll(entry.sheet(), cmp.text(), target, tags)
             }
-
-            const tags = ["attack, damage_" + intToWord(damageBonus())]
-
-            if(entry.value().attributs.indexOf("Percutante") !== -1) {
-                tags.push("percutante")
+        })
+    
+        // Binding
+        Bindings.add(entry.value().nom_arme, "bind_weapon", "WeaponDisplay", function() {
+            return entry.value()
+        })
+        entry.find("bind_weapon").on("click", function() {
+            Bindings.send(entry.sheet(), entry.value().nom_arme)
+        })
+    
+        // Gestion de l'encombrement
+        computed(function() {
+            const encombrement = encombrementRecord()
+            encombrement[entry.id()] = drop() ? 0 : entry.value().encombrement * getQualityCoeff(entry.value().qualite)
+            encombrementRecord.set(encombrement)
+        }, [drop])
+    
+        // Gestion de la mise de côté de l'objet
+        computed(function() {
+            if(drop()) {
+                entry.find("toggle_on").hide()
+                entry.find("toggle_off").show()
+                entry.find("main_row").addClass("opacity-50")
+                entry.find("degats_row").addClass("opacity-50")
+                entry.find("notes_row").addClass("opacity-50")
+                entry.find("weapon_name").removeClass("clickable")
+            } else {
+                entry.find("toggle_on").show()
+                entry.find("toggle_off").hide()
+                entry.find("main_row").removeClass("opacity-50")
+                entry.find("degats_row").removeClass("opacity-50")
+                entry.find("notes_row").removeClass("opacity-50")
+                entry.find("weapon_name").addClass("clickable")
             }
-
-            if(entry.value().attributs.indexOf("Épuisante") !== -1) {
-                tags.push("epuisante")
-            }
-
-            roll(entry.sheet(), cmp.text(), target, tags)
-        }
-    })
-
-    // Binding
-    Bindings.add(entry.value().nom_arme, "bind_weapon", "WeaponDisplay", function() {
-        return entry.value()
-    })
-    entry.find("bind_weapon").on("click", function() {
-        Bindings.send(entry.sheet(), entry.value().nom_arme)
-    })
-
-    // Gestion de l'encombrement
-    computed(function() {
-        const encombrement = encombrementRecord()
-        encombrement[entry.id()] = drop() ? 0 : entry.value().encombrement * getQualityCoeff(entry.value().qualite)
-        encombrementRecord.set(encombrement)
-    }, [drop])
-
-    // Gestion de la mise de côté de l'objet
-    computed(function() {
-        if(drop()) {
-            entry.find("toggle_on").hide()
-            entry.find("toggle_off").show()
-            entry.find("main_row").addClass("opacity-50")
-            entry.find("degats_row").addClass("opacity-50")
-            entry.find("notes_row").addClass("opacity-50")
-            entry.find("weapon_name").removeClass("clickable")
-        } else {
-            entry.find("toggle_on").show()
-            entry.find("toggle_off").hide()
-            entry.find("main_row").removeClass("opacity-50")
-            entry.find("degats_row").removeClass("opacity-50")
-            entry.find("notes_row").removeClass("opacity-50")
-            entry.find("weapon_name").addClass("clickable")
-        }
-    }, [drop])
-
-    entry.find("toggle_on").on("click", function(cmp) {
-        entry.find("left_behind").value(true)
-    })
-
-    entry.find("toggle_off").on("click", function(cmp) {
-        entry.find("left_behind").value(false)
-    })
-
-    entry.find("left_behind").on("update", function(cmp) {
-        drop.set(cmp.value())
-    })
-
+        }, [drop])
+    
+        entry.find("toggle_on").on("click", function(cmp) {
+            entry.find("left_behind").value(true)
+        })
+    
+        entry.find("toggle_off").on("click", function(cmp) {
+            entry.find("left_behind").value(false)
+        })
+    
+        entry.find("left_behind").on("update", function(cmp) {
+            drop.set(cmp.value())
+        })
+    
+    }
 }
 
 export const setupWeaponEditEntry = function(entry: Component<WeaponData>) {
@@ -165,11 +166,13 @@ const getQualityCoeff = function(quality: Quality) {
 }
 
 
-export const onWeaponDelete = function(entryId: string) {
-    // Gestion encombrement
-    const encombrement = encombrementRecord()
-    delete encombrement[entryId]
-    encombrementRecord.set(encombrement)
+export const onWeaponDelete = function(encombrementRecord: Signal<Record<string, number>>) {
+    return function(entryId: string) {
+        // Gestion encombrement
+        const encombrement = encombrementRecord()
+        delete encombrement[entryId]
+        encombrementRecord.set(encombrement)
+    }
 }
 
 const sanitizeData = function(entry: Component<WeaponData>) {

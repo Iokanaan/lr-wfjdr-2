@@ -11,7 +11,7 @@ import { onSkillDelete, setupBasicSkill, setupSkillEditEntry, setupSkillViewEntr
 import { setBStatListener, setBonuses, setPDStatListener, setStatListeners } from "./stats/stats";
 import { onTalentDelete, setupTalentEditEntry, setupTalentViewEntry } from "./talent/talent";
 import { cleanupRepeater, setupRepeater } from "./utils/repeaters";
-import { hideDescriptions } from "./utils/utils";
+import { computed, hideDescriptions, signal } from "./utils/utils";
 import { setArmeImpro, setMunitionListener, setPugilat } from "./combat/weaponBasics";
 import { onWeaponDelete, setupWeaponEditEntry, setupWeaponViewEntry } from "./combat/weaponRepeater";
 import { onItemDelete, setupItemEditEntry, setupItemViewEntry } from "./items/items";
@@ -45,30 +45,68 @@ init = function(sheet: Sheet<any>) {
         // Set sheet in global array
         globalSheets[sheet.getSheetId()] = sheet
 
+        const statSignals: StatSignals = {} as any
+
+        const encombrementRecord = signal({}) as Signal<Record<string, number>>
+        const totalEncombrement = computed(function() {
+            let totalEnc = 0
+            each(encombrementRecord(), function(enc) {
+                if(!Number.isNaN(enc) && enc !== undefined && enc !== null) {
+                    totalEnc += enc
+                }
+            })
+            return totalEnc
+        }, [encombrementRecord])
+
+        const talentsByEntry: Signal<Record<string, string>> = signal({})
+        const talents = computed(function() {
+            const talentSet: string[] = []
+            each(talentsByEntry(), function(talent) {
+                if(talentSet.indexOf(talent) === -1) {
+                    talentSet.push(talent)
+                }
+            })
+            return talentSet
+        }, [talentsByEntry])
+
+        const advancedSkillsByEntry: Signal<Record<string, SkillData>> = signal({})
+        const advancedSkills = computed(function() {
+            const talentSet: string[] = []
+            
+            each(advancedSkillsByEntry(), function(skill) {
+                if(talentSet.indexOf(skill.nom_comp_label) === -1) {
+                    talentSet.push(skill.nom_comp_label)
+                }
+            })
+            log(talentSet)
+            return talentSet
+        }, [advancedSkillsByEntry])
+        
+
         try {
             // Stats
             Tables.get("stats").each(function(stat: StatObject) {
-                setStatListeners(sheet, stat.id)
+                setStatListeners(sheet, stat.id, statSignals)
             })
-            setBonuses(sheet)
-            setBStatListener(sheet)
-            setPDStatListener(sheet)
+            setBonuses(sheet, statSignals)
+            setBStatListener(sheet, statSignals)
+            setPDStatListener(sheet, statSignals)
         } catch(e) {
             log("Error initializing stats")
         }
         try {
             // Skills
             Tables.get("skills_basic").each(function(skill) {
-                setupBasicSkill(sheet, skill)
+                setupBasicSkill(sheet, skill, statSignals, talents)
             })
-            setupRepeater(sheet.get("skill_repeater"), setupSkillEditEntry, setupSkillViewEntry, onSkillDelete)
+            setupRepeater(sheet.get("skill_repeater"), setupSkillEditEntry, setupSkillViewEntry(statSignals, advancedSkillsByEntry, talents), onSkillDelete(advancedSkillsByEntry))
         } catch(e) {
             log("Error initializing skills")
         }
 
         try {
             // Talents
-            setupRepeater(sheet.get("talent_repeater"), setupTalentEditEntry, setupTalentViewEntry, onTalentDelete)
+            setupRepeater(sheet.get("talent_repeater"), setupTalentEditEntry, setupTalentViewEntry(talentsByEntry), onTalentDelete(talentsByEntry))
             hideDescriptions(sheet.get("talent_repeater") as Component<Record<string, unknown>>, "talent_desc_col")
         
         } catch(e) {
@@ -78,23 +116,23 @@ init = function(sheet: Sheet<any>) {
         try {
             // Armes
             setupBadMunitionListener(sheet)
-            setupRepeater(sheet.get("weapons_repeater"), setupWeaponEditEntry, setupWeaponViewEntry, onWeaponDelete)
-            setPugilat(sheet)
-            setArmeImpro(sheet, "CC")
-            setArmeImpro(sheet, "CT")
+            setupRepeater(sheet.get("weapons_repeater"), setupWeaponEditEntry, setupWeaponViewEntry(statSignals, talents, encombrementRecord), onWeaponDelete(encombrementRecord))
+            setPugilat(sheet, statSignals)
+            setArmeImpro(sheet, "CC", statSignals)
+            setArmeImpro(sheet, "CT", statSignals)
             setMunitionListener(sheet)           
         } catch(e) {
             log("Error initializing weapons")
         }
         try {
-            setupRepeater(sheet.get("munition_repeater"), setupMunitionEditEntry, setupMunitionViewEntry, onMunitionDelete)
+            setupRepeater(sheet.get("munition_repeater"), setupMunitionEditEntry, setupMunitionViewEntry(encombrementRecord), onMunitionDelete(encombrementRecord))
         } catch(e) {
             log("Error initializing munitions")
         }
 
         try {
             // Armure
-            setupArmorRepeater(sheet)
+            setupArmorRepeater(sheet, talents, encombrementRecord)
             sheet.get("BE_reminder").text("BE : " + sheet.get("BE").text())
         } catch(e) {
             log("Error initializing armors")
@@ -102,19 +140,19 @@ init = function(sheet: Sheet<any>) {
 
         try {
             // Volet gauche
-            checkEncombrement(sheet)
-            setSleepListener(sheet)
+            checkEncombrement(sheet, statSignals, totalEncombrement)
+            setSleepListener(sheet, statSignals, talents)
             setRaceEditor(sheet)
             setClassEditor(sheet)
             setInitiativeListener(sheet)
-            setBlessuresListener(sheet)
+            setBlessuresListener(sheet, statSignals)
         } catch(e) {
             log("Error intializing left pane")
         }
 
         try {
             //Magie
-            setupRepeater(sheet.get("magic_repeater"), setupMagicEditEntry, setupMagicViewEntry, null)
+            setupRepeater(sheet.get("magic_repeater"), setupMagicEditEntry, setupMagicViewEntry(advancedSkills, talents), null)
             hideDescriptions(sheet.get("magic_repeater") as Component<Record<string, unknown>> , "magic_desc_col")
             setupRepeater(sheet.get("rune_repeater"), setupRuneEditEntry("runes"), setupRuneViewEntry, null)
             setupRepeater(sheet.get("rune_majeur_repeater"), setupRuneEditEntry("runes_majeures"), setupRuneViewEntry, null)
@@ -127,7 +165,11 @@ init = function(sheet: Sheet<any>) {
 
         // Inventaire
         try {
-            setupRepeater(sheet.get("item_repeater"), setupItemEditEntry, setupItemViewEntry, onItemDelete)
+            setupRepeater(sheet.get("item_repeater"), 
+                          setupItemEditEntry,
+                          setupItemViewEntry(encombrementRecord), 
+                          onItemDelete(encombrementRecord)
+                          )
         } catch(e) {
             log("Error initializing items")
         }

@@ -1,17 +1,16 @@
-import { signals, talents, totalEncombrement } from "../globals"
 import { switchCarrier } from "../help/carriers"
 import { computed, signal } from "../utils/utils"
 
-export const checkEncombrement = function(sheet: Sheet) {
+export const checkEncombrement = function(sheet: Sheet, statSignals: StatSignals, totalEncombrement: Computed<number>) {
     
     const encMaxCmp = sheet.get("max_encombrement")
     const encValCmp = sheet.get("encombrement_total")
     
     // Calcul de l'encombrement max en fonction de la force
     const encMax = computed(function() {
-        sheet.get("max_encombrement").text(" / " + (signals['F']() * 10).toString())
-        return signals['F']() * 10
-    }, [signals['F']])
+        sheet.get("max_encombrement").text(" / " + (statSignals['F']() * 10).toString())
+        return statSignals['F']() * 10
+    }, [statSignals['F']])
 
     computed(function() {
         encValCmp.text(Math.ceil(totalEncombrement()).toString())
@@ -32,24 +31,24 @@ export const checkEncombrement = function(sheet: Sheet) {
 
 }
 
-export const setSleepListener = function(sheet: Sheet) {
+export const setSleepListener = function(sheet: Sheet, statSignals: StatSignals, talents: Computed<string[]>) {
 
     // Comme on a besoin de la fortune max pour le sommeil, on déclare le computed ici
     const maxFortune = computed(function() {
-        let max = signals["PD"]()
+        let max = statSignals["PD"]()
         if(talents().indexOf("chance") !== -1) {
             max++
         }
         sheet.get("max_fortune").text(" / " + max)
-    }, [signals["PD"], talents])
+    }, [statSignals["PD"], talents])
 
     // Click sur le bouton sommeil
     sheet.get("sleep").on("click", function() {
 
         // On donne un PV si le personnage n'est pas gravement blessé
-        if(signals["B_actuel"]() > 3 && signals["B_actuel"]() <  (signals['B']() as number)) {
-            signals["B_actuel"].set(signals["B_actuel"]() + 1)
-            sheet.get("B_actuel").value(signals["B_actuel"]())
+        if(statSignals["B_actuel"]() > 3 && statSignals["B_actuel"]() <  (statSignals['B']() as number)) {
+            statSignals["B_actuel"].set(statSignals["B_actuel"]() + 1)
+            sheet.get("B_actuel").value(statSignals["B_actuel"]())
         }
 
         // On restaure les points de fortune
@@ -158,18 +157,18 @@ export const setInitiativeListener = function(sheet: Sheet<CharData>) {
 }
 
 
-export const setBlessuresListener = function(sheet: Sheet<CharData>) {
+export const setBlessuresListener = function(sheet: Sheet<CharData>, statSignals: StatSignals) {
 
     const bActuelCmp = sheet.get("B_actuel")
     const bMaxCmp = sheet.get("b_max")
 
     // Signal des blessures actuelles
-    signals["B_actuel"] = signal(sheet.get("B_actuel").value() as number)
+    statSignals["B_actuel"] = signal(sheet.get("B_actuel").value() as number)
 
     // Adaptation de la couleur en fonction des blessures
     computed(function() {
         // Si blessures <= 3 affichage du texte en rouge
-        if(signals["B_actuel"]() <= 3) {
+        if(statSignals["B_actuel"]() <= 3) {
             bActuelCmp.addClass("text-danger")
             bActuelCmp.removeClass("text-light")
             bMaxCmp.addClass("text-danger")
@@ -181,10 +180,10 @@ export const setBlessuresListener = function(sheet: Sheet<CharData>) {
             bMaxCmp.removeClass("text-danger")
             bMaxCmp.addClass("text-light")
         }
-    }, [signals["B_actuel"]])
+    }, [statSignals["B_actuel"]])
 
     // Mise à jour du signal à l'update de l'input
     bActuelCmp.on("update", function(cmp: Component) { 
-        signals["B_actuel"].set(cmp.value()) 
+        statSignals["B_actuel"].set(cmp.value()) 
     })
 }

@@ -1,23 +1,26 @@
-import { advancedSkillsByEntry, signals, talents, talentsByEntry } from "../globals"
 import { roll } from "../roll/rollHandler"
 import { computed, signal } from "../utils/utils"
 
-export const setupBasicSkill = function(sheet: Sheet, skill: SkillBasic) {
-  setupSkill(sheet.get, skill.cmp_id, skill.stat, skill.name, null)
+export const setupBasicSkill = function(sheet: Sheet, skill: SkillBasic, statSignals: StatSignals, talents: Computed<string[]>) {
+  setupSkill(sheet.get, skill.cmp_id, skill.stat, skill.name, null, statSignals, talents)
 }
 
-export const setupSkillViewEntry = function(entry: Component<SkillData>) {
-  setupSkill(entry.find, "av", entry.value().comp_stat, entry.value().nom, entry.value().specialite)
-
-  const allAdvancedSkills = advancedSkillsByEntry()
-  allAdvancedSkills[entry.id()] = entry.value()
-  advancedSkillsByEntry.set(allAdvancedSkills)
+export const setupSkillViewEntry = function(statSignals: StatSignals, advancedSkillsByEntry: Signal<Record<string, SkillData>>, talents: Computed<string[]>) {
+  return function(entry: Component<SkillData>) {
+    setupSkill(entry.find, "av", entry.value().comp_stat, entry.value().nom, entry.value().specialite, statSignals, talents)
+  
+    const allAdvancedSkills = advancedSkillsByEntry()
+    allAdvancedSkills[entry.id()] = entry.value()
+    advancedSkillsByEntry.set(allAdvancedSkills)
+  }
 }
 
-export const onSkillDelete = function(entryId: string) {
-  const allAdvancedSkills = advancedSkillsByEntry()
-  delete allAdvancedSkills[entryId]
-  advancedSkillsByEntry.set(allAdvancedSkills)
+export const onSkillDelete = function(advancedSkillsByEntry: Signal<Record<string, SkillData>>) {
+  return function(entryId: string) {
+    const allAdvancedSkills = advancedSkillsByEntry()
+    delete allAdvancedSkills[entryId]
+    advancedSkillsByEntry.set(allAdvancedSkills)
+  }
 }
 
 export const setupSkillEditEntry = function(entry: Component) {
@@ -95,7 +98,7 @@ export const setupSkillEditEntry = function(entry: Component) {
   })
 }
 
-const setupSkill = function(get: (id: string) => Component, skillCmpId: string, stat: Stat, skillName: string, specialite: string | null) {
+const setupSkill = function(get: (id: string) => Component, skillCmpId: string, stat: Stat, skillName: string, specialite: string | null, statSignals: StatSignals, talents: Computed<string[]>) {
 
   // Définition des signaux pour les cases à cocher
   const signalAq = signal(get('comp_' + skillCmpId + '_acq').value())
@@ -115,7 +118,7 @@ const setupSkill = function(get: (id: string) => Component, skillCmpId: string, 
   // Calcul de la valeur de compétence selon la stat et le niveau
   const skillVal = computed(
     function() {
-      let value = signals[stat]()
+      let value = statSignals[stat]()
       switch(signalLevel()) {
         case 1:
           break
@@ -133,7 +136,7 @@ const setupSkill = function(get: (id: string) => Component, skillCmpId: string, 
       get("comp_" + skillCmpId +"_val").text(value.toString())
       return value
     }
-  , [signals[stat], signalLevel, talents])
+  , [statSignals[stat], signalLevel, talents])
 
   // Mise à jour des signaux sur les update de checkbox
   get('comp_' + skillCmpId + '_acq').on('update', function(cmp) { signalAq.set(cmp.value()) })

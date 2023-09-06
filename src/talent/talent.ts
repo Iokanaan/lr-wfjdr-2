@@ -1,4 +1,4 @@
-import { talents, talentsByEntry } from "../globals"
+import { talents } from "../globals"
 import { computed, signal } from "../utils/utils"
 
 const talents_choices: Record<"maitrise" | "magie_commune" | "science_de_la_magie" | "sombre_savoir" | "inspiration_divine" | "magie_mineure", Record<string, string>> & Record<string, undefined | Record<string,string>> = {
@@ -30,27 +30,29 @@ Tables.get("magie_mineure").each(function(val) {
     talents_choices["magie_mineure"][val.name] = val.name  
 })
 
-export const setupTalentViewEntry = function(entry: Component) {
+export const setupTalentViewEntry = function(talentsByEntry: Signal<Record<string, string>>) {
+    return function(entry: Component) {
     
-    entry.find("talent_display").on("click", function(cmp: Component) {
-        const desc = entry.find("talent_desc_col")
-        if(desc.visible()) {
-            desc.hide()
-        } else {
-            desc.show()
-        }
-    })
+        entry.find("talent_display").on("click", function() {
+            const desc = entry.find("talent_desc_col")
+            if(desc.visible()) {
+                desc.hide()
+            } else {
+                desc.show()
+            }
+        })
+        
+        Bindings.add(entry.value().talent_name, "bind_talent", "TalentDisplay", function() {
+            return entry.value()
+        })
+        entry.find("bind_talent").on("click", function() {
+            Bindings.send(entry.sheet(), entry.value().talent_name)
+        })
     
-    Bindings.add(entry.value().talent_name, "bind_talent", "TalentDisplay", function() {
-        return entry.value()
-    })
-    entry.find("bind_talent").on("click", function() {
-        Bindings.send(entry.sheet(), entry.value().talent_name)
-    })
-
-    const allTalents = talentsByEntry()
-    allTalents[entry.id()] = entry.value().nom_talent_choice
-    talentsByEntry.set(allTalents)
+        const allTalents = talentsByEntry()
+        allTalents[entry.id()] = entry.value().nom_talent_choice
+        talentsByEntry.set(allTalents)
+    }
 }
 
 export const setupTalentEditEntry = function(entry: Component<unknown>) {
@@ -69,7 +71,7 @@ export const setupTalentEditEntry = function(entry: Component<unknown>) {
             subtypeChoiceCmp.setChoices(choiceList)
             if(choiceList[subtypeChoiceCmp.value()] === undefined) {
                 subtypeChoiceCmp.value(Object.keys(choiceList)[0])
-                subtypeCmp.value(Object.values(choiceList)[0])
+                subtypeCmp.value(Object.keys(choiceList)[0])
             }
             subtypeChoiceCmp.show()
         } else {
@@ -107,9 +109,11 @@ export const setupTalentEditEntry = function(entry: Component<unknown>) {
     })
 }
 
-export const onTalentDelete = function(entryId: string) {
-    // Gestion encombrement
-    const allTalents = talentsByEntry()
-    delete allTalents[entryId]
-    talentsByEntry.set(allTalents)
+export const onTalentDelete = function(talentsByEntry: Signal<Record<string, string>>) {
+    return function(entryId: string) {
+        // Gestion encombrement
+        const allTalents = talentsByEntry()
+        delete allTalents[entryId]
+        talentsByEntry.set(allTalents)
+    }
 }

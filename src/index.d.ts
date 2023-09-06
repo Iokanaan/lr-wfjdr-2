@@ -281,6 +281,8 @@ declare global {
 
     type RepeaterState = 'EDIT' | 'VIEW'
 
+    type StatSignals = Record<"B" | "BF" | "BE" | "PD" | Stat, Computed<number>> & Record<"B_actuel", Signal<number>>
+
 } 
 
 export {}
