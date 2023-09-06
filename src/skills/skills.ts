@@ -1,12 +1,12 @@
 import { roll } from "../roll/rollHandler"
 import { computed, signal } from "../utils/utils"
 
-export const setupBasicSkill = function(sheet: Sheet, skill: SkillBasic, statSignals: StatSignals, talents: Computed<string[]>) {
+export const setupBasicSkill = function(sheet: Sheet, skill: SkillBasicEntity, statSignals: StatSignals, talents: Computed<string[]>) {
   setupSkill(sheet.get, skill.cmp_id, skill.stat, skill.name, null, statSignals, talents)
 }
 
-export const setupSkillViewEntry = function(statSignals: StatSignals, advancedSkillsByEntry: Signal<Record<string, SkillData>>, talents: Computed<string[]>) {
-  return function(entry: Component<SkillData>) {
+export const setupSkillViewEntry = function(statSignals: StatSignals, advancedSkillsByEntry: Signal<Record<string, SkillEntryData>>, talents: Computed<string[]>) {
+  return function(entry: Component<SkillEntryData>) {
     setupSkill(entry.find, "av", entry.value().comp_stat, entry.value().nom, entry.value().specialite, statSignals, talents)
   
     const allAdvancedSkills = advancedSkillsByEntry()
@@ -15,7 +15,7 @@ export const setupSkillViewEntry = function(statSignals: StatSignals, advancedSk
   }
 }
 
-export const onSkillDelete = function(advancedSkillsByEntry: Signal<Record<string, SkillData>>) {
+export const onSkillDelete = function(advancedSkillsByEntry: Signal<Record<string, SkillEntryData>>) {
   return function(entryId: string) {
     const allAdvancedSkills = advancedSkillsByEntry()
     delete allAdvancedSkills[entryId]

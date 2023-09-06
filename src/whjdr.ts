@@ -19,11 +19,12 @@ import { onMunitionDelete, setupBadMunitionListener, setupMunitionEditEntry, set
 
 
 /*
-gestion des talents
 encombrement nain
 malus encombrement
+malus Ag
 raccourcis dégats  / localisation
 Icones bizarre
+Gestion parade / esquive / bouclier
 */
 
 
@@ -68,7 +69,7 @@ init = function(sheet: Sheet<any>) {
             return talentSet
         }, [talentsByEntry])
 
-        const advancedSkillsByEntry: Signal<Record<string, SkillData>> = signal({})
+        const advancedSkillsByEntry: Signal<Record<string, SkillEntryData>> = signal({})
         const advancedSkills = computed(function() {
             const talentSet: string[] = []
             each(advancedSkillsByEntry(), function(skill) {
@@ -83,16 +84,19 @@ init = function(sheet: Sheet<any>) {
         const armorLevel = computed(function(): ArmorLevel | null {
             let maxArmor: (ArmorLevel | null)[] = [null]
             each(armorLevelByEntry(), function(armorLevel) {
+                log("curr max" + maxArmor[0])
                 if(armorLevel === "Plaques") {
                     maxArmor[0] = armorLevel
+                    log("set armor Plaques")
                 } else if(armorLevel === "Mailles" && maxArmor[0] !== "Plaques") {
                     maxArmor[0] = armorLevel
+                    log("set armor Mailles")
                 } else if(armorLevel === "Cuir" && maxArmor[0] === null) {
                     maxArmor[0] = armorLevel
-                } else {
-                    maxArmor[0] = armorLevel
+                    log("set armor Cuir")
                 }
             })
+            log(maxArmor)
             return maxArmor[0]
         }, [armorLevelByEntry])
         
@@ -184,6 +188,7 @@ init = function(sheet: Sheet<any>) {
 
         try {
             // Volet gauche
+            sheet.get("name").text(sheet.properName())
             checkEncombrement(sheet, statSignals, totalEncombrement)
             setSleepListener(sheet, statSignals, talents)
             setRaceEditor(sheet)
@@ -197,7 +202,7 @@ init = function(sheet: Sheet<any>) {
         try {
             //Magie
             const magicRepeater = sheet.get("magic_repeater") as Component<Record<string, unknown>>
-            const runeRepeater = sheet.get("runes_repeater") as Component<Record<string, unknown>>
+            const runeRepeater = sheet.get("rune_repeater") as Component<Record<string, unknown>>
             const runeMajRepeater = sheet.get("rune_majeur_repeater") as Component<Record<string, unknown>>
             const rituelRepeater = sheet.get("rituel_repeater") as Component<Record<string, unknown>>
             setupRepeater(

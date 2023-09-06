@@ -1,6 +1,6 @@
 //@ts-check
 
-import { AttributeInputName, SkillConcInputName, SkillData, SkillExpInputName } from "./skill/types/skillTypes";
+import { AttributeInputName, SkillConcInputName, SkillEntryData, SkillExpInputName } from "./skill/types/skillTypes";
 import { WeaponSizeId, WeaponWieldingId, WeaponData } from "./weapon/types/weaponData";
 
 declare global { 
@@ -21,7 +21,6 @@ declare global {
         isNoire: boolean
     }
     
-
     interface Signal<T> {
         (): T;
         set(t:T)
@@ -35,7 +34,7 @@ declare global {
 
     type Handler<T> = (t: T) => void
 
-    declare class RollBuilder {
+    class RollBuilder {
         constructor(sheet: Sheet<any>)
         expression: (s: string) => RollBuilder
         visibility: (s: string) => RollBuilder
@@ -43,7 +42,7 @@ declare global {
         roll: () => void
     }
 
-    declare class Dice {
+    class Dice {
         static create: (s: string) => Dice
         tag: (s: string) => Dice
         static roll: (sheet: Sheet<any>, d: Dice, s: string) => void
@@ -54,24 +53,22 @@ declare global {
     declare var init: (sheet: Sheet<any>) => void
     declare var drop: (from: Sheet<any>, to: Sheet<any>) => void
     declare var initRoll: (result: DiceResult, callback: DiceResultCallback) => void
-    declare var wait: (ms: number, callback: () => void) => void
+    declare const wait: (ms: number, callback: () => void) => void
     declare var getCriticalHits: (result: DiceResult) => void
-    
     declare const log: (s: any) => void;
-
     declare const each: <T>(c: Record<string, T>, f: (i: T, eid: string) => void) => void;
 
-    declare const Tables: Table;
-    interface Table {
-        get(elem: 'skills_basic'): LrObject<SkillBasic>
-        get(elem: 'races'): LrObject<Race>
-        get(elem: 'competences_av'): LrObject<SkillAv>
-        get(elem: 'carriere'): LrObject<Carriere>
-        get(elem: 'talents'): LrObject<Talent>
-        get(elem: 'groupe_armes'): LrObject<GroupeArme>
-        get(elem: 'magies_communes' | 'domaines_occultes' | 'sombres_savoirs' | 'domaines_divins'): LrObject<DomaineMagie>
-        get(elem: 'magie_mineure'): LrObject<Spell>
-        get(id: string): LrObject
+    declare const Tables: Tables;
+    interface Tables {
+        get(elem: 'skills_basic'): Table<SkillBasicEntity>
+        get(elem: 'races'): Table<Race>
+        get(elem: 'competences_av'): Table<SkillAvEntity>
+        get(elem: 'carriere'): Table<Carriere>
+        get(elem: 'talents'): Table<Talent>
+        get(elem: 'groupe_armes'): Table<GroupeArme>
+        get(elem: 'magies_communes' | 'domaines_occultes' | 'sombres_savoirs' | 'domaines_divins'): Table<DomaineMagie>
+        get(elem: 'magie_mineure'): Table<Spell>
+        get(id: string): Table
     }
 
     declare const Bindings: Bindings
@@ -87,13 +84,13 @@ declare global {
         long_name: string
     }
 
-    declare type Talent = {
+    type Talent = {
         id: string,
         name: string,
         description: string
     }
 
-    declare type Carriere = {
+    type Carriere = {
         id: string,
         name: string,
         type: "base" | "avance",
@@ -117,34 +114,34 @@ declare global {
         debouche: string
     }
 
-    declare type StatObject = {
+    type StatObject = {
         id: Stat,
         value: Stat
     }
 
-    declare type Stat = "CC" | "CT" | "F" | "E" | "Ag" | "Int" | "FM" | "Soc"
+    type Stat = "CC" | "CT" | "F" | "E" | "Ag" | "Int" | "FM" | "Soc"
 
-    declare type SkillBasic = {
+    type SkillBasicEntity = {
         id: string,
         name: string,
         stat: Stat,
         cmp_id: string
     }
 
-    declare type SkillAv = {
+    type SkillAvEntity = {
         id: string,
         name: string,
         stat: Stat | "variable",
         variable: string
     }
 
-    declare type SkillData = {
+    type SkillEntryData = {
         nom: string,
         comp_stat: Stat,
         specialite: string
     }
 
-    interface LrObject<T> {
+    interface Table<T> {
         each(f:(a: T) => void);
         get(s: string): T;
         random(callback: (val: T) => void)
@@ -216,18 +213,24 @@ declare global {
     type Spell =  {
         id: string,
         name: string,
-        difficulte: number
+        difficulte: string,
         incantation: string,
         ingredient: string,
-        bonus_ingredient: number,
+        bonus_ingredient: string,
         description: string
     }
 
-    type SpellKnown = Spell & {
+    type SpellKnown = {
+        name: string,
+        incantation: string,
         spell_name: string,
         use_ingredient: boolean,
         main_category: string,
-        sub_category: string
+        difficulte: number,
+        ingredient: string,
+        bonus_ingredient: number,
+        sub_category: string,
+        description: string
     }
 
     interface Component<T = unkown > {
@@ -237,8 +240,8 @@ declare global {
         value():T,
         value(val: T): void
         find(elem: string): Component,
-        on(type: string, handler: (event: LrEvent) => void)
-        on(type: string, delegate: string, handler: (event: LrEvent) => void)
+        on(type: string, handler: (cmp: Component<T>) => void)
+        on(type: string, delegate: string, handler: (cmp: Component) => void)
         index(): string
         addClass(cl: string)
         removeClass(cl: string)
@@ -255,11 +258,12 @@ declare global {
     interface Sheet<T = CharData> {
         id(): string
         getSheetId(): number
-        //get(elem: 'weapons'): Component<Record<string, WeaponData>>,
-        get(s:string): Component<unknown>;
+        get(s:string): Component;
         setData(data: Partial<T>)
         getData(): T;
-        prompt(title: string, sheetId: string, callback: (result: componentData) => void, callbackInit?: (sheet: Sheet) => void)
+        prompt(title: string, sheetId: string, callback: (result: componentData) => void, callbackInit?: (sheet: Sheet) => void),
+        name(): string,
+        properName(): string
     }
 
     type Visibility = 'visible'

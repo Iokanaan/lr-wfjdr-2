@@ -22,52 +22,46 @@ typesMagie.each(function(type: DomaineMagie) {
 
 export const setupMagicViewEntry = function(advancedSkills: Computed<string[]>, armorLevel: Computed<ArmorLevel | null>, hasBouclier: Computed<boolean>, talents: Computed<string[]>) {
     return function(entry: Component<SpellKnown>) {
-    
+
+        const tags = computed(function() {
+            const tags: string[] = []
+            log(entry.value())
+            if(talents().indexOf("magie_noire") !== -1 && entry.value().main_category === "sombres_savoirs") {
+                tags.push("noire")
+            }
+            if(talents().indexOf("magie_vulgaire") !== -1 && advancedSkills().indexOf("Langage mystique") === -1) {
+                tags.push("vulgaire")
+            }
+            return tags
+        }, [talents, advancedSkills])
+        
+        const malus = computed(function() {
+            let malus = hasBouclier() ? 1 : 0
+            switch(armorLevel()) {
+                case "Plaques":
+                    malus = 5
+                    break
+                case "Mailles":
+                    malus = 3
+                    break
+                case "Cuir":
+                    malus = 1
+                    break
+                default:
+            }
+            if(talents().indexOf("incantation_de_bataille") !== -1) {
+                malus = Math.max(malus + 3, 0)
+            }
+            return malus
+        }, [armorLevel, hasBouclier, talents]) 
+
         // Lancement du sort au click sur son nom
         entry.find("spell_label").on("click", function(component: Component<unknown>) {
-            
-            const tags = computed(function() {
-                const tags: string[] = []
-                if(talents().indexOf("magie_noire") !== -1) {
-                    tags.push("noire")
-                }
-                if(talents().indexOf("magie_vulgaire") !== -1 && advancedSkills().indexOf("Langage mystique") === -1) {
-                    tags.push("vulgaire")
-                }
-                return tags
-            }, [talents, advancedSkills])
-
-            const spellTarget = computed(function() {
-                // Définition de la difficulté, avec un ajustement si ingrédient ou armure
-                let target = entry.value().difficulte
-
-                let malus = hasBouclier() ? 1 : 0
-                switch(armorLevel()) {
-                    case "Plaques":
-                        malus = 5
-                        break
-                    case "Mailles":
-                        malus = 3
-                        break
-                    case "Cuir":
-                        malus = 1
-                        break
-                    default:
-                }
-                if(talents().indexOf("magie_de_bataille") !== -1) {
-                    malus = Math.max(malus + 3, 0)
-                }
-                
-                target += malus
-
-                if(entry.find("use_ingredient").value() === true) {
-                    target -= entry.value().bonus_ingredient
-                }
-
-                return target
-
-            }, [armorLevel, hasBouclier, talents])
-
+            // Définition de la difficulté, avec un ajustement si ingrédient
+            let target = entry.value().difficulte + malus()
+            if(entry.find("use_ingredient").value() === true) {
+                target -= entry.value().bonus_ingredient
+            }
 
             // Reprise du nombre de dés à lancer
             let castLevel = entry.sheet().get("cast_level").value() as number
@@ -76,7 +70,7 @@ export const setupMagicViewEntry = function(advancedSkills: Computed<string[]>, 
             }
         
             // Lancer des dés
-            rollMagic(entry.sheet(), component.text(), castLevel, spellTarget(), tags())
+            rollMagic(entry.sheet(), component.text(), castLevel, target, tags())
         })
         
         // Affichage de la description du sort au click sur le livre
@@ -194,9 +188,9 @@ export const setupMagicEditEntry = function(entry: Component) {
         entry.find("spell_name").value(spellData.name)
         entry.find("spell_description").value(spellData.description)
         entry.find("incantation").value(spellData.incantation)
-        entry.find("difficulte").value(spellData.difficulte)
+        entry.find("difficulte").value(parseInt(spellData.difficulte))
         entry.find("ingredient").value(spellData.ingredient)
-        entry.find("bonus_ingredient").value(spellData.bonus_ingredient)
+        entry.find("bonus_ingredient").value(parseInt(spellData.bonus_ingredient))
         return spellData
     }, [spellSelected])
 
