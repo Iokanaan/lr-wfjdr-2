@@ -1,6 +1,23 @@
 import { switchCarrier } from "../help/carriers"
 import { computed, signal } from "../utils/utils"
 
+export const setupGold = function(sheet: Sheet, encombrementRecord: Signal<Record<string, number>>) {
+    const enc = encombrementRecord()
+    const gold = signal(sheet.get("gold").value() as number)
+    const silver = signal(sheet.get("silver").value() as number)
+    const copper = signal(sheet.get("copper").value() as number)
+    sheet.get("gold").on("update", function(cmp) { gold.set(cmp.value())})
+    sheet.get("silver").on("update", function(cmp) { silver.set(cmp.value())})
+    sheet.get("copper").on("update", function(cmp) { copper.set(cmp.value())})
+    const totalMoney = computed(function() { return gold() + silver() + copper()}, [gold, silver, copper])
+    computed(function() {
+        const enc = encombrementRecord()
+        enc["gold_enc"] = totalMoney() / 10
+        encombrementRecord.set(enc)
+    }, [totalMoney])
+
+}
+
 export const checkEncombrement = function(sheet: Sheet, statSignals: StatSignals, raceSignal: Signal<string>, totalEncombrement: Computed<number>) {
     
     const encMaxCmp = sheet.get("max_encombrement")
@@ -22,18 +39,31 @@ export const checkEncombrement = function(sheet: Sheet, statSignals: StatSignals
 
     // Adaptation des couleurs en fonction de l'encombrement
     computed(function() {
+        let malus = 0
         if(totalEncombrement() > encMax()) {
             encValCmp.addClass("text-danger")
             encValCmp.removeClass("text-light")
             encMaxCmp.addClass("text-danger")
+            const depassement = totalEncombrement() - encMax()
+            malus = Math.floor(depassement / 50)
+            if(depassement % 50 !== 0) {
+                malus++
+            }
+            malus = Math.min(statSignals['M'](), malus)
+            sheet.get("M").addClass("text-danger")
         } else {
             encValCmp.removeClass("text-danger")
             encValCmp.addClass("text-light")
             encMaxCmp.removeClass("text-danger")
+            sheet.get("M").removeClass("text-danger")
         }
-    }, [encMax, totalEncombrement])
 
+        sheet.get("M").value(statSignals['M']() - malus)
+
+    }, [statSignals['M'], encMax, totalEncombrement])
 }
+
+
 
 export const setSleepListener = function(sheet: Sheet, statSignals: StatSignals, talents: Computed<string[]>) {
 

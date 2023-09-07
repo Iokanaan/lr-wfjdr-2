@@ -287,7 +287,7 @@ declare global {
 
     type RepeaterState = 'EDIT' | 'VIEW'
 
-    type StatSignals = Record<"B" | "BF" | "BE" | "PD" | "Mag" | Stat, Computed<number>> & Record<"B_actuel", Signal<number>>
+    type StatSignals = Record<"B" | "BF" | "BE" | "PD" | "M" | "Mag" | Stat, Computed<number>> & Record<"B_actuel", Signal<number>>
     type ArmorLevel = "Cuir" | "Mailles" | "Plaques"
 } 
 

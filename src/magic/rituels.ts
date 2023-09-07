@@ -1,31 +1,8 @@
 import { rollMagic } from "../roll/rollHandler"
 import { computed } from "../utils/utils"
 
-export const setupRituelViewEntry = function(statSignals: StatSignals, armorLevel: Computed<ArmorLevel | null>, hasBouclier: Computed<boolean>, talents: Computed<string[]>) {
+export const setupRituelViewEntry = function(statSignals: StatSignals, talents: Computed<string[]>, malus: Computed<number>) {
     return function(entry: Component) {
-
-        const malus = computed(function() {
-            let malus = 0
-            switch(armorLevel()) {
-                case "Plaques":
-                    malus += 5
-                    break
-                case "Mailles":
-                    malus += 3
-                    break
-                case "Cuir":
-                    malus += 1
-                    break
-                default:
-            }
-            if(hasBouclier()) {
-                malus++
-            }
-            if(talents().indexOf("incantation_de_bataille") !== -1) {
-                malus = Math.max(malus - 3, 0)
-            }
-            return malus
-        }, [armorLevel, hasBouclier, talents]) 
 
         const difficulte = computed(function() {
             let diff = entry.value().rituel_difficulte
@@ -36,7 +13,6 @@ export const setupRituelViewEntry = function(statSignals: StatSignals, armorLeve
             diff += malus()
             return diff
         }, [malus, talents, statSignals["Mag"]])
-
 
         
         // Gestion du lancer du rituel

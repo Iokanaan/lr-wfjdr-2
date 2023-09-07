@@ -20,7 +20,22 @@ typesMagie.each(function(type: DomaineMagie) {
     }
 })
 
-export const setupMagicViewEntry = function(advancedSkills: Computed<string[]>, armorLevel: Computed<ArmorLevel | null>, hasBouclier: Computed<boolean>, talents: Computed<string[]>) {
+export const displayMagieMalus = function(sheet: Sheet, malus: Computed<number>) {
+
+    computed(function() {
+        if(malus() !== 0) {
+            sheet.get("spell_armor_malus_col").show()
+            sheet.get("spell_armor_malus").text("Malus d'armure : " + malus())
+            sheet.get("rituel_armor_malus_col").show()
+            sheet.get("rituel_armor_malus").text("Malus d'armure : " + malus())
+        } else {
+            sheet.get("rituel_armor_malus_col").hide()
+            sheet.get("rituel_armor_malus_col").hide()
+        }
+    }, [malus])
+}
+
+export const setupMagicViewEntry = function(advancedSkills: Computed<string[]>, talents: Computed<string[]>, malus: Computed<number>) {
     return function(entry: Component<SpellKnown>) {
 
         const tags = computed(function() {
@@ -33,29 +48,6 @@ export const setupMagicViewEntry = function(advancedSkills: Computed<string[]>, 
             }
             return tags
         }, [talents, advancedSkills])
-        
-        const malus = computed(function() {
-            let malus = 0
-            switch(armorLevel()) {
-                case "Plaques":
-                    malus += 5
-                    break
-                case "Mailles":
-                    malus += 3
-                    break
-                case "Cuir":
-                    malus += 1
-                    break
-                default:
-            }
-            if(hasBouclier()) {
-                malus++
-            }
-            if(talents().indexOf("incantation_de_bataille") !== -1) {
-                malus = Math.max(malus - 3, 0)
-            }
-            return malus
-        }, [armorLevel, hasBouclier, talents]) 
 
         // Lancement du sort au click sur son nom
         entry.find("spell_label").on("click", function(component: Component<unknown>) {

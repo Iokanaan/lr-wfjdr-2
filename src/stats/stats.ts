@@ -34,12 +34,14 @@ export function setStatListeners(sheet: Sheet, stat: Stat, statSignals: StatSign
 export function setBonuses(sheet: Sheet, statSignals: StatSignals) {
     statSignals['BE'] = computed(function() { 
         const value = Math.floor((statSignals['E']()) / 10)
+        sheet.get("BE_base").text(value.toString())
         sheet.get("BE").value(value)
         sheet.get("BE_reminder").text("BE : " + value)
         return value
     }, [statSignals['E']] )
     statSignals['BF'] = computed(function() {
-        const value = Math.floor((statSignals['F']()) / 10) 
+        const value = Math.floor((statSignals['F']()) / 10)
+        sheet.get("BF_base").text(value.toString()) 
         sheet.get("BF").value(value)
         return value
     }, [statSignals['F']] )   
@@ -53,6 +55,18 @@ export function setMagSignal(sheet: Sheet, statSignals: StatSignals) {
         base.set(cmp.value()) 
     })
     sheet.get('Mag_av').on('update', function(cmp: Component) { 
+        av.set(cmp.value()) 
+    }) 
+}
+
+export function setMSignal(sheet: Sheet, statSignals: StatSignals) {
+    const base = signal(sheet.get("M_base").value() as number)
+    const av = signal(sheet.get("M_av").value() as number)
+    statSignals["M"] = computed(function() { return base() + av() }, [base, av])
+    sheet.get('M_base').on('update', function(cmp: Component) { 
+        base.set(cmp.value()) 
+    })
+    sheet.get('M_av').on('update', function(cmp: Component) { 
         av.set(cmp.value()) 
     }) 
 }

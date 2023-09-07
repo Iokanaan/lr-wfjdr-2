@@ -2,13 +2,13 @@ import { setupArmorRepeater } from "./combat/armorRepeater";
 import { setupCarrierEditEntry, setupFolieViewEntry } from "./bio/bio";
 import { globalSheets } from "./globals";
 import { setCarrierInfoListener } from "./help/carriers";
-import { checkEncombrement, setBlessuresListener, setClassEditor, setInitiativeListener, setRaceEditor, setSleepListener } from "./leftPane/leftPane";
-import { setupMagicEditEntry, setupMagicViewEntry } from "./magic/magic";
+import { checkEncombrement, setBlessuresListener, setClassEditor, setInitiativeListener, setRaceEditor, setSleepListener, setupGold } from "./leftPane/leftPane";
+import { displayMagieMalus, setupMagicEditEntry, setupMagicViewEntry } from "./magic/magic";
 import { setupRituelViewEntry } from "./magic/rituels";
 import { setupRuneEditEntry, setupRuneViewEntry } from "./magic/runes";
 import { rollResultHandler } from "./roll/rollHandler";
 import { onSkillDelete, setupBasicSkill, setupSkillEditEntry, setupSkillViewEntry } from "./skills/skills";
-import { setBStatListener, setBonuses, setMagSignal, setPDStatListener, setStatListeners } from "./stats/stats";
+import { setBStatListener, setBonuses, setMSignal, setMagSignal, setPDStatListener, setStatListeners } from "./stats/stats";
 import { onTalentDelete, setupTalentEditEntry, setupTalentViewEntry } from "./talent/talent";
 import { cleanupRepeater, setupRepeater } from "./utils/repeaters";
 import { computed, hideDescriptions, signal } from "./utils/utils";
@@ -19,13 +19,11 @@ import { onMunitionDelete, setupBadMunitionListener, setupMunitionEditEntry, set
 
 
 /*
-malus encombrement sur mvt
 raccourcis dégats  / localisation
+degats sorts lire
 Icones bizarre
 Gestion parade / esquive / bouclier
 bug talents
-affichage malus armure 
-affichage niveau d'armure
 */
 
 
@@ -108,6 +106,30 @@ init = function(sheet: Sheet<any>) {
             return bcl[0]
         },[weaponsByEntry])
 
+        const malus = computed(function() {
+            let malus = 0
+            switch(armorLevel()) {
+                case "Plaques":
+                    malus += 5
+                    break
+                case "Mailles":
+                    malus += 3
+                    break
+                case "Cuir":
+                    malus += 1
+                    break
+                default:
+            }
+            if(hasBouclier()) {
+                malus++
+            }
+            if(talents().indexOf("incantation_de_bataille") !== -1) {
+                malus = Math.max(malus - 3, 0)
+            }
+            return malus
+        }, [armorLevel, hasBouclier, talents]) 
+    
+
         try {
             // Stats
             Tables.get("stats").each(function(stat: StatObject) {
@@ -115,6 +137,7 @@ init = function(sheet: Sheet<any>) {
             })
             setBonuses(sheet, statSignals)
             setMagSignal(sheet, statSignals)
+            setMSignal(sheet, statSignals)
             setBStatListener(sheet, statSignals)
             setPDStatListener(sheet, statSignals)
         } catch(e) {
@@ -187,6 +210,7 @@ init = function(sheet: Sheet<any>) {
         try {
             // Volet gauche
             const raceSignal = signal(sheet.get("custom_race").value() as string)
+            setupGold(sheet, encombrementRecord)
             checkEncombrement(sheet, statSignals, raceSignal, totalEncombrement)
             setSleepListener(sheet, statSignals, talents)
             setRaceEditor(sheet, raceSignal)
@@ -203,10 +227,11 @@ init = function(sheet: Sheet<any>) {
             const runeRepeater = sheet.get("rune_repeater") as Component<Record<string, unknown>>
             const runeMajRepeater = sheet.get("rune_majeur_repeater") as Component<Record<string, unknown>>
             const rituelRepeater = sheet.get("rituel_repeater") as Component<Record<string, unknown>>
+            displayMagieMalus(sheet, malus)
             setupRepeater(
                 magicRepeater,
                 setupMagicEditEntry,
-                setupMagicViewEntry(advancedSkills, armorLevel, hasBouclier, talents), 
+                setupMagicViewEntry(advancedSkills, talents, malus), 
                 null
                 )
             hideDescriptions(magicRepeater, "magic_desc_col")
@@ -227,7 +252,7 @@ init = function(sheet: Sheet<any>) {
             setupRepeater(
                 rituelRepeater, 
                 null, 
-                setupRituelViewEntry(statSignals, armorLevel, hasBouclier, talents), 
+                setupRituelViewEntry(statSignals, talents, malus), 
                 null
                 )
         } catch(e) {
