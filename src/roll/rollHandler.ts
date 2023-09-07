@@ -8,26 +8,38 @@ export const rollResultHandler = function(result: DiceResult, callback: DiceResu
         sheet.get("crit_confirmation").hide()
         const rollTags = parseTags(sheet, result)
 
-        if(!rollTags.isDamage) {
-            if(!rollTags.isMagic) {
-                // Gestion Jet 1d100
-                handleD100(sheet, result, rollTags)
-                // Si jet d'attaque, on affiche les boutons de dégâts
-                if(rollTags.isAttack) {
-                    handleAttack(sheet, rollTags)
-                }
-            } else {
-                // Gestion de la magie
-                if(rollTags.isRune) {
-                    handleRune(sheet, result, rollTags)
-                } else {
-                    handleSpell(sheet, result, rollTags)
-                }
-            }
-        } else {
-            // Gestiion jets de dégâts
+        // Gestiion jets de dégâts
+        if(rollTags.isDamage) {
             handleDamage(sheet, result, rollTags)
+            return
         }
+
+        // Gestion des runes
+        if(rollTags.isRune) {
+            handleRune(sheet, result, rollTags)
+            return
+        }
+
+        // Gestion de la magie
+        if(rollTags.isMagic) {
+            handleSpell(sheet, result, rollTags)
+            return
+        }
+        
+        // Si jet d'attaque, on affiche les boutons de dégâts
+        if(rollTags.isAttack) {
+            handleAttack(sheet, rollTags)
+            return
+        }
+
+        if(rollTags.isLocalisation) {
+            handleLocalisation(sheet, result, rollTags)
+            return
+        }
+  
+        // Gestion Jet 1d100 par defaut
+        handleD100(sheet, result, rollTags)
+
     })
 }
 
@@ -53,9 +65,7 @@ export const rollMagic = function(sheet: Sheet<unknown>, title: string, nDice: n
     }
     tags.push("magic")
     tags.push("target_" + intToWord(target))
-    log(tags)
     tags.push("sheet_" + intToWord(sheet.getSheetId()))
-    log("target dans roll" + target)
     if(tags.indexOf("vulgaire") !== -1 || tags.indexOf("noire") !== -1) {
         nDice++
     }
@@ -63,8 +73,6 @@ export const rollMagic = function(sheet: Sheet<unknown>, title: string, nDice: n
     if(tags.indexOf("noire") !== -1) {
         diceExpression = "keeph(" + diceExpression + ", " + (nDice - 1) + ")"
     }
-    log(intToWord(target))
-    log(tags.join(','));
     new RollBuilder(sheet)
     .expression("(" + diceExpression + ")[" + tags.join(',') + "]")
     .title(title)
@@ -161,7 +169,8 @@ const parseTags = function(sheet: Sheet<unknown>, result: DiceResult): RollTags 
         'isMagic': result.allTags.indexOf("magic") !== -1,
         'isVulgaire': result.allTags.indexOf("vulgaire") !== -1,
         'isRune': result.allTags.indexOf("rune") !== -1,
-        'isNoire': result.allTags.indexOf("noire") !== -1
+        'isNoire': result.allTags.indexOf("noire") !== -1,
+        'isLocalisation': result.allTags.indexOf("localisation") !== -1
     }
 }
 
@@ -181,6 +190,11 @@ const handleAttack = function(sheet: Sheet<unknown>, rollTags: RollTags) {
         sheet.get("roll_damage_2").on("click", function() { (rollTags.isCrit ? rollCrit : rollDamage)(rollTags.sheetSource, "Dégâts", 2, rollTags.damageBonus, damageTags) })
         sheet.get("roll_damage_2").show()
     }
+}
+
+const handleLocalisation = function(sheet: Sheet<unknown>, result: DiceResult, rollTags: RollTags) {
+    sheet.get("result_label").text(result.total > 0 ? result.total.toString() : "0")
+    sheet.get("result_subtext").text(attackLocation(rollTags.referenceRoll))
 }
 
 // Gestion d'un D100

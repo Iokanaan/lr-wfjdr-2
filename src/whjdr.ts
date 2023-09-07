@@ -83,7 +83,6 @@ init = function(sheet: Sheet<any>) {
         const armorLevel = computed(function(): ArmorLevel | null {
             let maxArmor: (ArmorLevel | null)[] = [null]
             each(armorLevelByEntry(), function(armorLevel) {
-                log(armorLevel)
                 if(armorLevel === "Plaques") {
                     maxArmor[0] = armorLevel
                 } else if(armorLevel === "Mailles" && maxArmor[0] !== "Plaques") {

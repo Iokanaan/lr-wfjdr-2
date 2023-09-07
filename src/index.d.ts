@@ -18,7 +18,8 @@ declare global {
         isMagic: boolean,
         isVulgaire: boolean,
         isRune: boolean,
-        isNoire: boolean
+        isNoire: boolean,
+        isLocalisation: boolean
     }
     
     interface Signal<T> {
