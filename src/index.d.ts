@@ -38,7 +38,7 @@ declare global {
     class RollBuilder {
         constructor(sheet: Sheet<any>)
         expression: (s: string) => RollBuilder
-        visibility: (s: string) => RollBuilder
+        visibility: (s: Visibility) => RollBuilder
         title: (s: string) => RollBuilder
         roll: () => void
     }
@@ -268,7 +268,7 @@ declare global {
         properName(): string
     }
 
-    type Visibility = 'visible'
+    type Visibility = 'visible' | 'gm' | 'gmonly'
 
     type CharData = Stats
 

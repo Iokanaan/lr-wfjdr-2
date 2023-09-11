@@ -3,7 +3,7 @@ import { setupCarrierEditEntry, setupFolieViewEntry } from "./bio/bio";
 import { globalSheets } from "./globals";
 import { setCarrierInfoListener } from "./help/carriers";
 import { checkEncombrement, setBlessuresListener, setClassEditor, setInitiativeListener, setRaceEditor, setSleepListener, setupGold } from "./leftPane/leftPane";
-import { displayMagieMalus, setupMagicEditEntry, setupMagicViewEntry } from "./magic/magic";
+import { displayMagieMalus, setupMagicEditEntry, setupMagicViewEntry, setupSpellDamage } from "./magic/magic";
 import { setupRituelViewEntry } from "./magic/rituels";
 import { setupRuneEditEntry, setupRuneViewEntry } from "./magic/runes";
 import { rollResultHandler } from "./roll/rollHandler";
@@ -19,11 +19,13 @@ import { onMunitionDelete, setupBadMunitionListener, setupMunitionEditEntry, set
 
 
 /*
-raccourcis dégats  / localisation
-degats sorts lire
-Icones bizarre
-Gestion parade / esquive / bouclier
-bug talents
+ajout sorts buggée
+typo ailes_du_faucon
+typo course a pied
+manque capitaine
+bug quantité
+tireur d'élite ko
+getBarAttriutes
 */
 
 
@@ -31,12 +33,15 @@ bug talents
 init = function(sheet: Sheet<any>) {
     if (sheet.id() === "main") {
         try {
-            if(sheet.getData()["race"] === undefined) {
-                sheet.setData({"race":"Humain"})
+            if(sheet.getData()["race"] === undefined || sheet.getData()["custom_race"] === undefined) {
+                sheet.setData({"race":"Humain", "custom_race":"Humain"})
             }
 
-            if(sheet.getData()["class"] === undefined) {
-                sheet.setData({"class":"Agitateur"})
+            if(sheet.getData()["class"] === undefined || sheet.getData()["custom_race"] === undefined) {
+                sheet.setData({"class":"agitateur", "custom_class":"Agitateur"})
+            }
+            if(sheet.getData()["visibility"] === undefined) {
+                sheet.setData({"visibiliy":"visible"})
             }
         } catch(e) {
             log("Error set default race/class")
@@ -180,9 +185,9 @@ init = function(sheet: Sheet<any>) {
                 setupWeaponViewEntry(statSignals, talents, weaponsByEntry, encombrementRecord), 
                 onWeaponDelete(weaponsByEntry, encombrementRecord)
                 )
-            setPugilat(sheet, statSignals)
-            setArmeImpro(sheet, "CC", statSignals)
-            setArmeImpro(sheet, "CT", statSignals)
+            setPugilat(sheet, statSignals, talents)
+            setArmeImpro(sheet, "CC", statSignals, talents)
+            setArmeImpro(sheet, "CT", statSignals, talents)
             setMunitionListener(sheet)           
         } catch(e) {
             log("Error initializing weapons")
@@ -210,7 +215,7 @@ init = function(sheet: Sheet<any>) {
             // Volet gauche
             const raceSignal = signal(sheet.get("custom_race").value() as string)
             setupGold(sheet, encombrementRecord)
-            checkEncombrement(sheet, statSignals, raceSignal, totalEncombrement)
+            checkEncombrement(sheet, statSignals, raceSignal, talents, totalEncombrement)
             setSleepListener(sheet, statSignals, talents)
             setRaceEditor(sheet, raceSignal)
             setClassEditor(sheet)
@@ -254,6 +259,7 @@ init = function(sheet: Sheet<any>) {
                 setupRituelViewEntry(statSignals, talents, malus), 
                 null
                 )
+            setupSpellDamage(sheet, statSignals)
         } catch(e) {
             log("Error initializing magic")
         }

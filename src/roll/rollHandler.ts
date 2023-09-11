@@ -28,6 +28,7 @@ export const rollResultHandler = function(result: DiceResult, callback: DiceResu
         
         // Si jet d'attaque, on affiche les boutons de dégâts
         if(rollTags.isAttack) {
+            handleD100(sheet, result, rollTags)
             handleAttack(sheet, rollTags)
             return
         }
@@ -54,6 +55,7 @@ export const roll = function(sheet: Sheet<unknown>, title: string, target: numbe
     new RollBuilder(sheet)
         .expression("(1d100)[" + tags.join(',') + "]")
         .title(title)
+        .visibility(sheet.get("visibility").value())
         .roll()
 }
 
@@ -76,6 +78,7 @@ export const rollMagic = function(sheet: Sheet<unknown>, title: string, nDice: n
     new RollBuilder(sheet)
     .expression("(" + diceExpression + ")[" + tags.join(',') + "]")
     .title(title)
+    .visibility(sheet.get("visibility").value())
     .roll()
 }
 
@@ -86,11 +89,31 @@ const rollDamage = function(sheet: Sheet<unknown>, title: string, nDice: number,
         tags.push(t[i])
     }
     tags.push("sheet_" + intToWord(sheet.getSheetId()))
+    tags.push("damage_" + intToWord(damageBonus))
     new RollBuilder(sheet)
         // Jets en keeph pour prendre en compte l'attribut percutant
         .expression("(keeph(" + nDice + "d10) + " + damageBonus + ")[" + tags.join(',') + "]")
         .title(title)
+        .visibility(sheet.get("visibility").value())
         .roll()
+}
+
+export const rollSpellDamage = function(sheet: Sheet<unknown>, damageBonus: number, fmStat: number, t: string[]) {
+    const tags = []
+    for(let i=0; i<t.length; i++) {
+        tags.push(t[i])
+    }
+    tags.push("sheet_" + intToWord(sheet.getSheetId()))
+    tags.push("damage")
+    tags.push("magic")
+    tags.push("damage_" + intToWord(damageBonus))
+    tags.push("target_" + intToWord(fmStat))
+    new RollBuilder(sheet)
+    // Jets en keeph pour prendre en compte l'attribut percutant
+    .expression("(1d10 + 1d100 + " + damageBonus + ")[" + tags.join(',') + "]")
+    .title("Dégâts")
+    .visibility(sheet.get("visibility").value())
+    .roll()
 }
 
 const rollCrit = function(sheet: Sheet<unknown>, title: string, nDice: number, damageBonus: number, t: string[]) {
@@ -105,6 +128,7 @@ const rollCrit = function(sheet: Sheet<unknown>, title: string, nDice: number, d
     new RollBuilder(sheet)
         .expression("(expl(keeph(" + nDice + "d10)) + 10 + " + damageBonus + ")" + tags_str)
         .title(title)
+        .visibility(sheet.get("visibility").value())
         .roll()
 }
 
@@ -176,7 +200,6 @@ const parseTags = function(sheet: Sheet<unknown>, result: DiceResult): RollTags 
 
 // Gestion d'un jet d'attaque
 const handleAttack = function(sheet: Sheet<unknown>, rollTags: RollTags) {
-    
     // Ajout des tags du jet de dégat (damage, lancé de référence pour la localisation, valeur cible de référence)
     const damageTags = ["damage", "roll_" + intToWord(rollTags.referenceRoll) , "target_" + intToWord(rollTags.target !== undefined ? rollTags.target : 0)]
     
@@ -236,15 +259,24 @@ const handleRune = function(sheet: Sheet<unknown>, result: DiceResult, rollTags:
 
 // Gestion d'un jet de dégâts
 const handleDamage = function(sheet: Sheet<unknown>, result: DiceResult, rollTags: RollTags) {
-    sheet.get("result_label").text(result.total > 0 ? result.total.toString() : "0")
-    sheet.get("result_subtext").text(attackLocation(rollTags.referenceRoll))
+    let refRoll = 0
+    if(rollTags.isMagic) {
+        const total = result.total - result.all[1].value
+        sheet.get("result_label").text(total > 0 ? total.toString() : "0")
+        sheet.get("result_subtext").text(attackLocation(result.all[1].value))
+        refRoll = result.all[1].value
+    } else {
+        sheet.get("result_label").text(result.total > 0 ? result.total.toString() : "0")
+        sheet.get("result_subtext").text(attackLocation(rollTags.referenceRoll))
+        refRoll = rollTags.referenceRoll
+    }
     // Si jet de dégâts normal (pas un critique), et qu'on fait 10, on affiche la confirmation du critique
     const target = rollTags.target !== undefined ? rollTags.target : 0
     if(!rollTags.isCrit) {
         for(let i=0; i<result.all.length; i++) {
             if(!result.all[i].discarded && result.all[i].value === 10) {
                 sheet.get("crit_confirmation").on("click", function() {
-                    roll(rollTags.sheetSource, "Fureur d'Ulric", target, ["attack", "crit", "roll_" + intToWord(rollTags.referenceRoll)])
+                    roll(rollTags.sheetSource, "Fureur d'Ulric", target, ["attack", "crit", "damage_" + intToWord(rollTags.damageBonus), "roll_" + intToWord(refRoll)])
                 })
                 sheet.get("crit_confirmation").show()
                 break;

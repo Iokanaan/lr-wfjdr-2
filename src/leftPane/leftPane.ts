@@ -18,7 +18,7 @@ export const setupGold = function(sheet: Sheet, encombrementRecord: Signal<Recor
 
 }
 
-export const checkEncombrement = function(sheet: Sheet, statSignals: StatSignals, raceSignal: Signal<string>, totalEncombrement: Computed<number>) {
+export const checkEncombrement = function(sheet: Sheet, statSignals: StatSignals, raceSignal: Signal<string>, talents: Computed<string[]>, totalEncombrement: Computed<number>) {
     
     const encMaxCmp = sheet.get("max_encombrement")
     const encValCmp = sheet.get("encombrement_total")
@@ -29,9 +29,12 @@ export const checkEncombrement = function(sheet: Sheet, statSignals: StatSignals
         if(raceSignal() === "Nain") {
             multiplateur = 20
         }
+        if(talents().indexOf("animal_de_trait") !== -1) {
+            multiplateur = 30
+        }
         sheet.get("max_encombrement").text(" / " + (statSignals['F']() * multiplateur).toString())
         return statSignals['F']() * multiplateur
-    }, [statSignals['F'], raceSignal])
+    }, [statSignals['F'], raceSignal, talents])
 
     computed(function() {
         encValCmp.text(Math.ceil(totalEncombrement()).toString())
@@ -74,6 +77,7 @@ export const setSleepListener = function(sheet: Sheet, statSignals: StatSignals,
             max++
         }
         sheet.get("max_fortune").text(" / " + max)
+        return max
     }, [statSignals["PD"], talents])
 
     // Click sur le bouton sommeil

@@ -1,4 +1,4 @@
-import { rollMagic } from "../roll/rollHandler"
+import { rollMagic, rollSpellDamage } from "../roll/rollHandler"
 import { computed, signal } from "../utils/utils"
 
 const magies = {} as Record<string, Record<string, Record<string, Spell>>>
@@ -20,6 +20,12 @@ typesMagie.each(function(type: DomaineMagie) {
     }
 })
 
+export const setupSpellDamage = function(sheet: Sheet, statSignals: StatSignals) {
+    sheet.get("degats_spell").on("click", function() {
+        rollSpellDamage(sheet, sheet.get("degats_spell_val").value(), statSignals["FM"](), [])
+    })
+}
+
 export const displayMagieMalus = function(sheet: Sheet, malus: Computed<number>) {
 
     computed(function() {
@@ -29,7 +35,7 @@ export const displayMagieMalus = function(sheet: Sheet, malus: Computed<number>)
             sheet.get("rituel_armor_malus_col").show()
             sheet.get("rituel_armor_malus").text("Malus d'armure : " + malus())
         } else {
-            sheet.get("rituel_armor_malus_col").hide()
+            sheet.get("spell_armor_malus_col").hide()
             sheet.get("rituel_armor_malus_col").hide()
         }
     }, [malus])
