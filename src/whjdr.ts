@@ -1,4 +1,4 @@
-import { setupArmorRepeater } from "./combat/armorRepeater";
+import { setupArmorCraftSheet, setupArmorRepeater } from "./combat/armorRepeater";
 import { setupCarrierEditEntry, setupFolieViewEntry } from "./bio/bio";
 import { globalSheets } from "./globals";
 import { setCarrierInfoListener } from "./help/carriers";
@@ -13,19 +13,15 @@ import { onTalentDelete, setupTalentEditEntry, setupTalentViewEntry } from "./ta
 import { cleanupRepeater, setupRepeater } from "./utils/repeaters";
 import { computed, hideDescriptions, signal } from "./utils/utils";
 import { setArmeImpro, setMunitionListener, setPugilat } from "./combat/weaponBasics";
-import { onWeaponDelete, setupWeaponEditEntry, setupWeaponViewEntry } from "./combat/weaponRepeater";
-import { onItemDelete, setupItemEditEntry, setupItemViewEntry } from "./items/items";
+import { onWeaponDelete, setupWeaponCraftSheet, setupWeaponEditEntry, setupWeaponViewEntry } from "./combat/weaponRepeater";
+import { onItemDelete, setupItemCraftSheet, setupItemEditEntry, setupItemViewEntry } from "./items/items";
 import { onMunitionDelete, setupBadMunitionListener, setupMunitionEditEntry, setupMunitionViewEntry } from "./combat/munitionRepeater";
 
 
 /*
-ajout sorts buggée
-typo ailes_du_faucon
-typo course a pied
 manque capitaine
-bug quantité
-tireur d'élite ko
 getBarAttriutes
+bug bonus bf / dégats armes
 */
 
 
@@ -298,6 +294,8 @@ init = function(sheet: Sheet<any>) {
         if(sheet.get("qualite_item").value() === "Moyenne") {
             sheet.get("qualite_item").value("Moyenne")
         }
+        setupItemCraftSheet(sheet)
+
     }
     if(sheet.id() === "WeaponCraft") {
         if(sheet.get("groupe_arme").value() === "-") {
@@ -321,12 +319,17 @@ init = function(sheet: Sheet<any>) {
         if(sheet.get("degats").value() === undefined) {
             sheet.get("degats").value(0)
         }
-        if(sheet.get("bonus_bf").value() === false) {
+        if(sheet.getData().bonus_bf === undefined) {
             sheet.get("bonus_bf").value(false)
+        }
+        if(sheet.getData().bonus_bf_as_int === undefined) {
+            sheet.get("bonus_bf_as_int").value(Number(sheet.get("bonus_bf").value()))
         }
         if(sheet.get("use_powder").value() === false) {
             sheet.get("use_powder").value(false)
         }
+
+        setupWeaponCraftSheet(sheet)
     }
 
     if(sheet.id() === "ArmorCraft") {
@@ -342,6 +345,8 @@ init = function(sheet: Sheet<any>) {
         if((sheet.get("couverture") as ChoiceComponent<string[]>).value().length === 0) {
             sheet.get("couverture").value([])
         }
+
+        setupArmorCraftSheet(sheet)
     }
 }
 
@@ -379,3 +384,12 @@ drop = function(from, to) {
         return "rituel_repeater"
     }
 }
+
+/*getBarAttributes = function (sheet) {
+    if (sheet.id() === "main") {  
+        log("set wounds")
+        return {
+          "Wounds": ['B_actuel', 5 ]
+       }
+    }
+ };*/

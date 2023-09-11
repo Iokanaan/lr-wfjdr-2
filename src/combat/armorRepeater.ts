@@ -24,8 +24,24 @@ export const setupArmorRepeater = function(sheet: Sheet<unknown>, talents: Compu
 }
 
 const setupArmorEditEntry = function(entry: Component<ArmorData>) {
-    entry.find("couverture").on("update", function(cmp) {
-        entry.find("couverture_input").value(cmp.value().join(', '))
+    setupArmorEdit(entry.find)
+}
+
+export const setupArmorCraftSheet = function(sheet: Sheet<ArmorData>) {
+    setupArmorEdit(sheet.get)
+}
+
+const setupArmorEdit = function(get: (s: string) => Component) {
+    get("couverture").on("update", function(cmp) {
+        get("couverture_input").value(cmp.value().join(', '))
+    })
+    get("qualite_armure").on("update", function(cmp) {
+        log(cmp.value())
+        if(cmp.value() === "Moyenne") {
+            get("non_standard_quality").value(0)
+        } else {
+            get("non_standard_quality").value(1)
+        }
     })
 }
 

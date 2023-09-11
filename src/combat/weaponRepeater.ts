@@ -109,59 +109,65 @@ export const setupWeaponViewEntry = function(statSignals: StatSignals, talents: 
     }
 }
 
-export const setupWeaponEditEntry = function(entry: Component<WeaponData>) {
+export const setupWeaponCraftSheet = function(sheet: Sheet<WeaponData>) {
+    setupEdit(sheet, sheet.get)
+}
 
-    presetData(entry)
+export const setupEdit = function(elem: Sheet<WeaponData> | Component<WeaponData>, get: (s: string) => Component) {
 
-    const typeArmeInput = entry.find("type_arme")
-    const distanceRow = entry.find("distance_row")
+    const typeArmeInput = get("type_arme")
+    const distanceRow = get("distance_row")
     if(typeArmeInput.value() !== "1") {
         distanceRow.show()
     } else {
         distanceRow.hide()
     }
-    entry.find("type_arme").on("update", function(cmp: Component<string>) {
+    get("type_arme").on("update", function(cmp: Component<string>) {
         if(typeArmeInput.value() !== "1") {
             distanceRow.show()
         } else {
             distanceRow.hide()
         }
-        entry.find("type_arme_as_int").value(parseInt(cmp.value()))
+        get("type_arme_as_int").value(parseInt(cmp.value()))
     })
 
-    entry.find("bonus_bf").on("update", function(cmp: Component<boolean>) { 
-        entry.find("bonus_bf_as_int").value(Number(cmp.value())) 
+    get("bonus_bf").on("update", function(cmp: Component<boolean>) { 
+        get("bonus_bf_as_int").value(Number(cmp.value())) 
     })
 
-    entry.find("demi").on("click", function() {
-        entry.find("rechargement").value("½")
+    get("demi").on("click", function() {
+        get("rechargement").value("½")
     })
 
-    entry.find("groupe_arme").on("update", function(cmp) {
+    get("groupe_arme").on("update", function(cmp) {
         if(cmp.value() === "0") {
-            entry.find("groupe_arme_exists").value(0)
+            get("groupe_arme_exists").value(0)
         } else {
-            entry.find("groupe_arme_exists").value(1)
+            get("groupe_arme_exists").value(1)
         }
     })
 
-    entry.find("qualite").on("update", function(cmp) {
+    get("qualite").on("update", function(cmp) {
         if(cmp.value() === "Moyenne") {
-            entry.find("non_standard_quality").value(0)
+            get("non_standard_quality").value(0)
         } else {
-            entry.find("non_standard_quality").value(1)
+            get("non_standard_quality").value(1)
         }
     })
 
-    entry.find("attributs").on("update",function(cmp) {
+    get("attributs").on("update",function(cmp) {
         if(cmp.value().length === 0) {
-            entry.find("has_attributes").value(0)
+            get("has_attributes").value(0)
         } else {
-            entry.find("has_attributes").value(1)
+            get("has_attributes").value(1)
         }
-        entry.find("attributes_input").value(cmp.value().join(', '))
+        get("attributes_input").value(cmp.value().join(', '))
     })
+}
 
+export const setupWeaponEditEntry = function(entry: Component<WeaponData>) {
+    presetData(entry)
+    setupEdit(entry, entry.find)
 }
 
 const getQualityCoeff = function(quality: Quality) {
@@ -284,6 +290,7 @@ const presetData = function(entry: Component<WeaponData>) {
     if(entry.value().attributs === undefined) {
         entry.find("attribut").value([]) 
     }
+    log("Bonus bf " + entry.value().bonus_bf)
     if(entry.value().bonus_bf === undefined) { 
         entry.find("bonus_bf").value(false) 
     }
@@ -293,6 +300,7 @@ const presetData = function(entry: Component<WeaponData>) {
     if(entry.value().cout === undefined) { 
         entry.find("cout").value(0) 
     }
+    log("degats " + entry.value().bonus_bf)
     if(entry.value().degats === undefined) { 
         entry.find("degats").value(0) 
     }
@@ -301,8 +309,5 @@ const presetData = function(entry: Component<WeaponData>) {
     }
     if(entry.value().encombrement === undefined) { 
         entry.find("encombrement").value(0)
-    }
-    if(entry.value().groupe_arme === undefined) {
-        entry.find("groupe_arme").value("-")
     }
 }

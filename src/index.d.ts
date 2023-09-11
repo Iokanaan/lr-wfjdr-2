@@ -58,6 +58,7 @@ declare global {
     declare var getCriticalHits: (result: DiceResult) => void
     declare const log: (s: any) => void;
     declare const each: <T>(c: Record<string, T>, f: (i: T, eid: string) => void) => void;
+    declare var getBarAttributes: (sheet: Sheet<any>) => Record<string, [string, string | number]> | void;
 
     declare const Tables: Tables;
     interface Tables {

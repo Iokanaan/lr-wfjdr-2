@@ -47,12 +47,28 @@ export const setupItemViewEntry = function(encombrementRecord: Signal<Record<str
     }
 }
 
-export const setupItemEditEntry = function(entry: Component<Munition>) {
-    entry.find("qualite_item").on("update", function(cmp) {
+export const setupItemEditEntry = function(entry: Component<Item>) {
+    // Forcer la persistence si  valeur undefined
+    if(entry.value().qte_item === undefined) {
+        entry.find("qte_item").value(1)
+    }
+    setupItemEdit(entry.find)
+}
+
+export const setupItemCraftSheet = function(sheet: Sheet<Item>) {
+    // Forcer la persistence si  valeur undefined
+    if(sheet.getData().qte_item === undefined) {
+        sheet.get("qte_item").value(1)
+    }
+    setupItemEdit(sheet.get)
+}
+
+const setupItemEdit = function(get: (s: string) => Component) {
+    get("qualite_item").on("update", function(cmp) {
         if(cmp.value() === "Moyenne") {
-            entry.find("non_standard_quality").value(0)
+            get("non_standard_quality").value(0)
         } else {
-            entry.find("non_standard_quality").value(1)
+            get("non_standard_quality").value(1)
         }
     })
 }
