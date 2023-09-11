@@ -385,11 +385,10 @@ drop = function(from, to) {
     }
 }
 
-/*getBarAttributes = function (sheet) {
+getBarAttributes = function (sheet) {
     if (sheet.id() === "main") {  
-        log("set wounds")
         return {
-          "Wounds": ['B_actuel', 5 ]
-       }
+            "wounds": ["B_actuel", 'B']
+        }
     }
- };*/
+ }
