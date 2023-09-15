@@ -1,8 +1,10 @@
 import { roll } from "../roll/rollHandler"
 import { computed, intToWord, signal } from "../utils/utils"
 
+
+
 export const setupWeaponViewEntry = function(whSheet: WarhammerSheet) {
-    return function(entry: Component<WeaponData>) {
+    return function(entry: WeaponDisplayEntry) {
 
         sanitizeData(entry)
     
@@ -94,11 +96,11 @@ export const setupWeaponViewEntry = function(whSheet: WarhammerSheet) {
             }
         }, [drop])
     
-        entry.find("toggle_on").on("click", function(cmp) {
+        entry.find("toggle_on").on("click", function() {
             entry.find("left_behind").value(true)
         })
     
-        entry.find("toggle_off").on("click", function(cmp) {
+        entry.find("toggle_off").on("click", function() {
             entry.find("left_behind").value(false)
         })
     
@@ -109,67 +111,65 @@ export const setupWeaponViewEntry = function(whSheet: WarhammerSheet) {
     }
 }
 
-export const setupWeaponCraftSheet = function(sheet: Sheet<WeaponData>) {
-    setupEdit(sheet, sheet.get)
-}
+export const setupWeaponEditEntry = function(elem: WeaponEditEntry) {
 
-export const setupEdit = function(elem: Sheet<WeaponData> | Component<WeaponData>, get: (s: string) => Component) {
-
-    const typeArmeInput = get("type_arme")
-    const distanceRow = get("distance_row")
+    const typeArmeInput = elem.find("type_arme")
+    const distanceRow = elem.find("distance_row")
     if(typeArmeInput.value() !== "1") {
         distanceRow.show()
     } else {
         distanceRow.hide()
     }
-    get("type_arme").on("update", function(cmp: Component<string>) {
+    
+    elem.find("type_arme").on("update", function(cmp) {
         if(typeArmeInput.value() !== "1") {
             distanceRow.show()
         } else {
             distanceRow.hide()
         }
-        get("type_arme_as_int").value(parseInt(cmp.value()))
+        elem.find("type_arme_as_int").value(parseInt(cmp.value()) as 1 | 2)
     })
 
-    get("bonus_bf").on("update", function(cmp: Component<boolean>) { 
-        get("bonus_bf_as_int").value(Number(cmp.value())) 
+    elem.find("bonus_bf").on("update", function(cmp: Component<boolean>) { 
+        elem.find("bonus_bf_as_int").value(Number(cmp.value()) as 0 | 1) 
     })
 
-    get("demi").on("click", function() {
-        get("rechargement").value("½")
+    elem.find("demi").on("click", function() {
+        elem.find("rechargement").value("½")
     })
 
-    get("groupe_arme").on("update", function(cmp) {
+    elem.find("groupe_arme").on("update", function(cmp) {
         if(cmp.value() === "0") {
-            get("groupe_arme_exists").value(0)
+            elem.find("groupe_arme_exists").value(0)
         } else {
-            get("groupe_arme_exists").value(1)
+            elem.find("groupe_arme_exists").value(1)
         }
     })
 
-    get("qualite").on("update", function(cmp) {
+    elem.find("qualite").on("update", function(cmp) {
         if(cmp.value() === "Moyenne") {
-            get("non_standard_quality").value(0)
+            elem.find("non_standard_quality").value(0)
         } else {
-            get("non_standard_quality").value(1)
+            elem.find("non_standard_quality").value(1)
         }
     })
 
-    get("attributs").on("update",function(cmp) {
+    elem.find("attributs").on("update",function(cmp) {
         if(cmp.value().length === 0) {
-            get("has_attributes").value(0)
+            elem.find("has_attributes").value(0)
         } else {
-            get("has_attributes").value(1)
+            elem.find("has_attributes").value(1)
         }
-        get("attributes_input").value(cmp.value().join(', '))
+        elem.find("attributes_input").value(cmp.value().join(', '))
     })
 }
 
+/*
 export const setupWeaponEditEntry = function(entry: Component<WeaponData>) {
     presetData(entry)
     setupEdit(entry, entry.find)
 }
-
+*/
 const getQualityCoeff = function(quality: Quality) {
     if(quality === "Bonne" || quality === "Exceptionnelle") {
         return 0.9
@@ -236,7 +236,7 @@ const sanitizeData = function(entry: Component<WeaponData>) {
         changed = true
     }
     if(entryData.bonus_bf_as_int === undefined) {
-        entryData.bonus_bf_as_int = Number(entryData.bonus_bf) 
+        entryData.bonus_bf_as_int = Number(entryData.bonus_bf) as 0 | 1
         changed = true
     }
     if(entryData.cout === undefined) { 

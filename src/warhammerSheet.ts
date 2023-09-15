@@ -3,12 +3,12 @@ import { computed, intToWord, signal } from "./utils/utils"
 export const armorCraftSheet = function(sheet: Sheet<ArmorData>) {
     const _whSheet: ArmorCraftSheet = {} as any
     _whSheet.raw = function() { return sheet } 
-    _whSheet.find = function(id: string) { return sheet.get(id)}
+    _whSheet.find = function(id: string) { return sheet.get(id) }
     _whSheet.stringId = function() { return intToWord(sheet.getSheetId())}
     return _whSheet
 }
 
-export const warhammerSheet = function(sheet: Sheet<CharData>): WarhammerSheet {
+export const warhammerSheet = function(sheet: Sheet<CharData>) {
 
     const _whSheet: WarhammerSheet = {} as any
     _whSheet.raw = function() { return sheet } 

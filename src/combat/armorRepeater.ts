@@ -16,11 +16,11 @@ export const setupArmorRepeater = function(whSheet: WarhammerSheet) {
         setArmorSchema(whSheet.raw(), totalArmor)
     }, [whSheet.allArmors])
     // Initialisation du repeater
-    setupRepeater(whSheet, "armor_repeater", setupArmorEditEntry, setupArmorViewEntry(whSheet), onDelete(whSheet))
+    setupRepeater(whSheet, "armor_repeater", setupArmorEditEntry as (entry: Component<any>) => void, setupArmorViewEntry(whSheet), onDelete(whSheet))
     
 }
 
-export const setupArmorEditEntry = function(elem: ArmorCraftSheet | Component) {
+export const setupArmorEditEntry = function(elem: ArmorCraftSheet | ArmorEditEntry) {
     elem.find("couverture").on("update", function(cmp) {
         elem.find("couverture_input").value(cmp.value().join(', '))
     })

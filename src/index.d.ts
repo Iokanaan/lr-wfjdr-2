@@ -36,7 +36,7 @@ declare global {
     type Handler<T> = (t: T) => void
 
 
-    type WarhammerSheet = ExtendedSheet<CharData> & {
+    type WarhammerSheet = {
         race: Signal<string>
         entryStates: Record<string, Record<string, RepeaterState | undefined>>
         encombrementRecord: Signal<Record<string, number>>
@@ -51,17 +51,17 @@ declare global {
         weaponsByEntry: Signal<Record<string, WeaponData | null>>
         malusArmor: Computed<number>
         allArmors: Signal<Record<string, Record<"Tête" | "Bras" | "Corps" | "Jambes", number>>>
-    }
+    } & ExtendedSheet<CharData>
 
-    type ExtendedSheet<T> = {
+    interface ExtendedSheet<T> {
         raw(): Sheet<T>,
-        find(id: string): Component<unknown>,
+        find(id: string): Component<unknown> | ChoiceComponent<unknown>,
         stringId(): string
     }
 
-    type ArmorCraftSheet = ExtendedSheet<ArmorData> & {
-        find(s: "couverture_input"): Component<string> 
-    }
+
+
+
 
     class RollBuilder {
         constructor(sheet: Sheet<any>)
@@ -264,7 +264,7 @@ declare global {
         description: string
     }
 
-    interface Component<T = unkown > {
+    interface Component<T = unkown> {
         id(): string
         show():void
         hide(): void
@@ -289,7 +289,7 @@ declare global {
     interface Sheet<T = CharData> {
         id(): string
         getSheetId(): number
-        get(s:string): Component;
+        get(s:string): Component | ChoiceComponent;
         setData(data: Partial<T>)
         getData(): T;
         prompt(title: string, sheetId: string, callback: (result: componentData) => void, callbackInit?: (sheet: Sheet) => void),

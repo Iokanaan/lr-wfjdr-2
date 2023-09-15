@@ -13,7 +13,7 @@ import { onTalentDelete, setupTalentEditEntry, setupTalentViewEntry } from "./ta
 import { reset, setupRepeater } from "./utils/repeaters";
 import { hideDescriptions } from "./utils/utils";
 import { setArmeImpro, setMunitionListener, setPugilat } from "./combat/weaponBasics";
-import { onWeaponDelete, setupWeaponCraftSheet, setupWeaponEditEntry, setupWeaponViewEntry } from "./combat/weaponRepeater";
+import { onWeaponDelete, setupWeaponEditEntry, setupWeaponViewEntry } from "./combat/weaponRepeater";
 import { onItemDelete, setupItemCraftSheet, setupItemEditEntry, setupItemViewEntry } from "./items/items";
 import { onMunitionDelete, setupBadMunitionListener, setupMunitionEditEntry, setupMunitionViewEntry } from "./combat/munitionRepeater";
 import { armorCraftSheet, warhammerSheet } from "./warhammerSheet";
@@ -24,9 +24,6 @@ manque capitaine
 getBarAttriutes
 bug bonus bf / dégats armes
 */
-
-
-
 
 // @ts-ignore
 init = function(sheet: Sheet<any>) {
@@ -204,20 +201,20 @@ init = function(sheet: Sheet<any>) {
     }
 
     if(sheet.id() === "ArmorCraft") {
-        if(sheet.get("type_armure").value() === "-") {
-            sheet.get("type_armure").value("-")
+        const armorSheet = armorCraftSheet(sheet) 
+        if(armorSheet.find("type_armure").value() === "-") {
+            armorSheet.find("type_armure").value("-")
         }
-        if(sheet.get("disponibilite").value() === "0") {
-            sheet.get("disponibilite").value("0")
+        if(armorSheet.find("disponibilite").value() === "0") {
+            armorSheet.find("disponibilite").value("0")
         }
-        if(sheet.get("qualite_armure").value() === "Moyenne") {
-            sheet.get("qualite_armure").value("Moyenne")
+        if(armorSheet.find("qualite_armure").value() === "Moyenne") {
+            armorSheet.find("qualite_armure").value("Moyenne")
         }
-        if((sheet.get("couverture") as ChoiceComponent<string[]>).value().length === 0) {
-            sheet.get("couverture").value([])
+        if(armorSheet.find("couverture").value().length === 0) {
+            armorSheet.find("couverture").value([])
         }
-    
-        setupArmorEdit(armorCraftSheet(sheet).find("couverture_input"))
+        setupArmorEditEntry(armorSheet)
     }
 }
 

@@ -45,6 +45,17 @@ export const setupRepeater = function(
     })
 }
 
+export const reset = function(whSheet: WarhammerSheet, repeaterId: string,     
+    setupEditEntry: ((entry: Component<any>) => void) | null,
+    setupViewEntry: ((entry: Component<any>) => void) | null
+    ) {
+    whSheet.entryStates[repeaterId] = {}
+    wait(200, function() {
+        const repeater = whSheet.raw().get(repeaterId) as Component<Record<string, unknown>>
+        reviewEntries(repeater, whSheet.entryStates[repeaterId], setupEditEntry, setupViewEntry)
+    })
+}
+
 const reviewEntries = function(
     rep: Component<Record<string, unknown>>, 
     entryStates: Record<string, RepeaterState | undefined>, 
@@ -68,17 +79,5 @@ const reviewEntries = function(
             // L'entry est stockée en mode VIEW
             entryStates[entryId] = 'VIEW'
         }
-    })
-}
-
-export const reset = function(whSheet: WarhammerSheet, repeaterId: string,     
-    setupEditEntry: ((entry: Component<any>) => void) | null,
-    setupViewEntry: ((entry: Component<any>) => void) | null
-    ) {
-    const repeater = whSheet.raw().get(repeaterId)
-    whSheet.entryStates[repeaterId] = {}
-    wait(200, function() {
-        const repeater = whSheet.raw().get(repeaterId)
-        reviewEntries(repeater, whSheet.entryStates[repeaterId], setupEditEntry, setupViewEntry)
     })
 }
