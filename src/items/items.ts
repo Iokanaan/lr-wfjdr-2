@@ -1,15 +1,15 @@
 import { computed, signal } from "../utils/utils"
 
-export const setupItemViewEntry = function(encombrementRecord: Signal<Record<string, number>>) {
+export const setupItemViewEntry = function(whSheet: WarhammerSheet) {
     return function(entry: Component<Item>) {
         // Gestion de l'encombrement
         const qte = signal(entry.value().qte_item)
         const drop = signal(entry.find("left_behind").value() as boolean)
 
         computed(function() {
-            const encombrement = encombrementRecord()
+            const encombrement = whSheet.encombrementRecord()
             encombrement[entry.id()] = drop() ? 0 : entry.value().enc_item * qte()
-            encombrementRecord.set(encombrement)
+            whSheet.encombrementRecord.set(encombrement)
         }, [qte, drop])
 
         // Signaler le changement de quantité pour l'encombrement
@@ -73,11 +73,11 @@ const setupItemEdit = function(get: (s: string) => Component) {
     })
 }
 
-export const onItemDelete = function(encombrementByEntry: Signal<Record<string, number>>) {
+export const onItemDelete = function(whSheet: WarhammerSheet) {
     return function(entryId: string) {
         // Gestion encombrement
-        const encombrement = encombrementByEntry()
+        const encombrement = whSheet.encombrementRecord()
         delete encombrement[entryId]
-        encombrementByEntry.set(encombrement)
+        whSheet.encombrementRecord.set(encombrement)
     }
 }

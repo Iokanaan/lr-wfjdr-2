@@ -1,18 +1,18 @@
 import { rollMagic } from "../roll/rollHandler"
 import { computed } from "../utils/utils"
 
-export const setupRituelViewEntry = function(statSignals: StatSignals, talents: Computed<string[]>, malus: Computed<number>) {
+export const setupRituelViewEntry = function(whSheet: WarhammerSheet) {
     return function(entry: Component) {
 
         const difficulte = computed(function() {
             let diff = entry.value().rituel_difficulte
             diff = diff === undefined ? 0 : diff
-            if(talents().indexOf("meditation") !== -1) {
-                diff -= statSignals["Mag"]()
+            if(whSheet.talents().indexOf("meditation") !== -1) {
+                diff -= whSheet.statSignals["Mag"]()
             }
-            diff += malus()
+            diff += whSheet.malusArmor()
             return diff
-        }, [malus, talents, statSignals["Mag"]])
+        }, [whSheet.malusArmor, whSheet.talents, whSheet.statSignals["Mag"]])
 
         
         // Gestion du lancer du rituel
@@ -21,7 +21,7 @@ export const setupRituelViewEntry = function(statSignals: StatSignals, talents: 
             // Détermination du niveau de lancer
             let castLevel = entry.sheet().get("cast_rituel_level").value() as number
             if(castLevel === null) {
-                castLevel = statSignals["Mag"]()
+                castLevel = whSheet.statSignals["Mag"]()
             }
     
             // Jet de dés

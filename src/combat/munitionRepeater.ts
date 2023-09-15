@@ -1,15 +1,15 @@
 import { computed, signal } from "../utils/utils"
 
-export const setupMunitionViewEntry = function(encombrementRecord: Signal<Record<string, number>>) {
+export const setupMunitionViewEntry = function(wSheet: WarhammerSheet) {
     return function(entry: Component<Munition>) {
         // Gestion de l'encombrement
         const qte = signal(entry.value().qte_mun)
         const drop = signal(entry.find("left_behind").value() as boolean)
     
         computed(function() {
-            const encombrement = encombrementRecord()
+            const encombrement = wSheet.encombrementRecord()
             encombrement[entry.id()] = drop() ? 0 : (entry.value().encombrement * qte() * getQualityCoeff(entry.value().qualite)) / 5
-            encombrementRecord.set(encombrement)
+            wSheet.encombrementRecord.set(encombrement)
         }, [qte, drop])
         
         // Signaler le changement de quantité pour l'encombrement
@@ -63,38 +63,38 @@ export const setupMunitionEditEntry = function(entry: Component<Munition>) {
     })
 }
 
-export const onMunitionDelete = function(encombrementRecord: Signal<Record<string, number>>) {
+export const onMunitionDelete = function(wSheet: WarhammerSheet) {
     return function(entryId: string) {
         // Gestion encombrement
-        const encombrement = encombrementRecord()
+        const encombrement = wSheet.encombrementRecord()
         delete encombrement[entryId]
-        encombrementRecord.set(encombrement)
+        wSheet.encombrementRecord.set(encombrement)
     }
 }
 
-export const setupBadMunitionListener = function(sheet: Sheet) {
+export const setupBadMunitionListener = function(wSheet: WarhammerSheet) {
 
-    const badMunitions = signal(sheet.get("bad_munition").value())
+    const badMunitions = signal(wSheet.find("bad_munition").value())
 
     computed(function() {
         if(badMunitions()) {
-            sheet.get("toggle_on_munitions").show()
-            sheet.get("toggle_off_munitions").hide()
+            wSheet.find("toggle_on_munitions").show()
+            wSheet.find("toggle_off_munitions").hide()
         } else {
-            sheet.get("toggle_on_munitions").hide()
-            sheet.get("toggle_off_munitions").show()
+            wSheet.find("toggle_on_munitions").hide()
+            wSheet.find("toggle_off_munitions").show()
         }
     }, [badMunitions])
 
-    sheet.get("toggle_on_munitions").on("click", function() {
-        sheet.get("bad_munition").value(false)
+    wSheet.find("toggle_on_munitions").on("click", function() {
+        wSheet.find("bad_munition").value(false)
     })
 
-    sheet.get("toggle_off_munitions").on("click", function() {
-        sheet.get("bad_munition").value(true)
+    wSheet.find("toggle_off_munitions").on("click", function() {
+        wSheet.find("bad_munition").value(true)
     })
 
-    sheet.get("bad_munition").on("update", function(cmp) {
+    wSheet.find("bad_munition").on("update", function(cmp) {
         badMunitions.set(cmp.value())
     })
 }

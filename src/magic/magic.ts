@@ -20,45 +20,45 @@ typesMagie.each(function(type: DomaineMagie) {
     }
 })
 
-export const setupSpellDamage = function(sheet: Sheet, statSignals: StatSignals) {
-    sheet.get("degats_spell").on("click", function() {
-        rollSpellDamage(sheet, sheet.get("degats_spell_val").value(), statSignals["FM"](), [])
+export const setupSpellDamage = function(wSheet: WarhammerSheet) {
+    wSheet.find("degats_spell").on("click", function() {
+        rollSpellDamage(wSheet.raw(), wSheet.find("degats_spell_val").value() as number, wSheet.statSignals["FM"](), [])
     })
 }
 
-export const displayMagieMalus = function(sheet: Sheet, malus: Computed<number>) {
+export const displayMagieMalus = function(wSheet: WarhammerSheet) {
 
     computed(function() {
-        if(malus() !== 0) {
-            sheet.get("spell_armor_malus_col").show()
-            sheet.get("spell_armor_malus").text("Malus d'armure : " + malus())
-            sheet.get("rituel_armor_malus_col").show()
-            sheet.get("rituel_armor_malus").text("Malus d'armure : " + malus())
+        if(wSheet.malusArmor() !== 0) {
+            wSheet.find("spell_armor_malus_col").show()
+            wSheet.find("spell_armor_malus").text("Malus d'armure : " + wSheet.malusArmor())
+            wSheet.find("rituel_armor_malus_col").show()
+            wSheet.find("rituel_armor_malus").text("Malus d'armure : " + wSheet.malusArmor())
         } else {
-            sheet.get("spell_armor_malus_col").hide()
-            sheet.get("rituel_armor_malus_col").hide()
+            wSheet.find("spell_armor_malus_col").hide()
+            wSheet.find("rituel_armor_malus_col").hide()
         }
-    }, [malus])
+    }, [wSheet.malusArmor])
 }
 
-export const setupMagicViewEntry = function(advancedSkills: Computed<string[]>, talents: Computed<string[]>, malus: Computed<number>) {
+export const setupMagicViewEntry = function(whSheet: WarhammerSheet) {
     return function(entry: Component<SpellKnown>) {
 
         const tags = computed(function() {
             const tags: string[] = []
-            if(talents().indexOf("magie_noire") !== -1 && entry.value().main_category === "sombres_savoirs") {
+            if(whSheet.talents().indexOf("magie_noire") !== -1 && entry.value().main_category === "sombres_savoirs") {
                 tags.push("noire")
             }
-            if(talents().indexOf("magie_vulgaire") !== -1 && advancedSkills().indexOf("Langage mystique") === -1) {
+            if(whSheet.talents().indexOf("magie_vulgaire") !== -1 && whSheet.advancedSkills().indexOf("Langage mystique") === -1) {
                 tags.push("vulgaire")
             }
             return tags
-        }, [talents, advancedSkills])
+        }, [whSheet.talents, whSheet.advancedSkills])
 
         // Lancement du sort au click sur son nom
         entry.find("spell_label").on("click", function(component: Component<unknown>) {
             // Définition de la difficulté, avec un ajustement si ingrédient
-            let target = entry.value().difficulte + malus()
+            let target = entry.value().difficulte + whSheet.malusArmor()
             if(entry.find("use_ingredient").value() === true) {
                 target -= entry.value().bonus_ingredient
             }

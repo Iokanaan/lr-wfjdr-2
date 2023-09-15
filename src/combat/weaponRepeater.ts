@@ -1,7 +1,7 @@
 import { roll } from "../roll/rollHandler"
 import { computed, intToWord, signal } from "../utils/utils"
 
-export const setupWeaponViewEntry = function(statSignals: StatSignals, talents: Computed<string[]>, weaponsByEntry: Signal<Record<string, WeaponData | null>>, encombrementRecord: Signal<Record<string, number>>) {
+export const setupWeaponViewEntry = function(whSheet: WarhammerSheet) {
     return function(entry: Component<WeaponData>) {
 
         sanitizeData(entry)
@@ -10,21 +10,21 @@ export const setupWeaponViewEntry = function(statSignals: StatSignals, talents: 
     
         // Set du bonus de dégâts
         const damageBonus = computed(function() {
-            let damage = entry.value().bonus_bf ? entry.value().degats + (statSignals["BF"]()) : entry.value().degats
-            if(talents().indexOf("coups_puissants") !== -1 && entry.value().type_arme === "1") {
+            let damage = entry.value().bonus_bf ? entry.value().degats + (whSheet.statSignals["BF"]()) : entry.value().degats
+            if(whSheet.talents().indexOf("coups_puissants") !== -1 && entry.value().type_arme === "1") {
                 return damage + 1
             }
-            if(talents().indexOf("tir_en_puissance") !== -1 && entry.value().type_arme === "2") {
+            if(whSheet.talents().indexOf("tir_en_puissance") !== -1 && entry.value().type_arme === "2") {
                 return damage + 1
             }
             return damage
-        }, [statSignals["BF"], talents])
+        }, [whSheet.statSignals["BF"], whSheet.talents])
     
         // Jet d'attaque
         entry.find("weapon_name").on("click", function(cmp: Component) {
             if(!drop()) {
                 const targetStat = entry.value().type_arme === "1" ? "CC" : "CT"
-                let target = statSignals[targetStat]()
+                let target = whSheet.statSignals[targetStat]()
     
                 // Gestion du bonus de qualité
                 if(entry.value().qualite === "Exceptionnelle") {
@@ -64,15 +64,15 @@ export const setupWeaponViewEntry = function(statSignals: StatSignals, talents: 
     
         // Gestion de l'encombrement
         computed(function() {
-            const encombrement = encombrementRecord()
+            const encombrement = whSheet.encombrementRecord()
             encombrement[entry.id()] = drop() ? 0 : entry.value().encombrement * getQualityCoeff(entry.value().qualite)
-            encombrementRecord.set(encombrement)
+            whSheet.encombrementRecord.set(encombrement)
         }, [drop])
 
         computed(function() {
-            const weapons = weaponsByEntry()
+            const weapons = whSheet.weaponsByEntry()
             weapons[entry.id()] = drop() ? null : entry.value()
-            weaponsByEntry.set(weapons)
+            whSheet.weaponsByEntry.set(weapons)
         }, [drop])
     
         // Gestion de la mise de côté de l'objet
@@ -178,16 +178,16 @@ const getQualityCoeff = function(quality: Quality) {
 }
 
 
-export const onWeaponDelete = function(weaponsByEntry: Signal<Record<string, WeaponData | null>>, encombrementRecord: Signal<Record<string, number>>) {
+export const onWeaponDelete = function(wSheet: WarhammerSheet) {
     return function(entryId: string) {
         // Gestion encombrement
-        const encombrement = encombrementRecord()
+        const encombrement = wSheet.encombrementRecord()
         delete encombrement[entryId]
-        encombrementRecord.set(encombrement)
+        wSheet.encombrementRecord.set(encombrement)
 
-        const weapons = weaponsByEntry()
+        const weapons = wSheet.weaponsByEntry()
         delete weapons[entryId]
-        weaponsByEntry.set(weapons)
+        wSheet.weaponsByEntry.set(weapons)
     }
 }
 
@@ -290,7 +290,6 @@ const presetData = function(entry: Component<WeaponData>) {
     if(entry.value().attributs === undefined) {
         entry.find("attribut").value([]) 
     }
-    log("Bonus bf " + entry.value().bonus_bf)
     if(entry.value().bonus_bf === undefined) { 
         entry.find("bonus_bf").value(false) 
     }
@@ -300,7 +299,6 @@ const presetData = function(entry: Component<WeaponData>) {
     if(entry.value().cout === undefined) { 
         entry.find("cout").value(0) 
     }
-    log("degats " + entry.value().bonus_bf)
     if(entry.value().degats === undefined) { 
         entry.find("degats").value(0) 
     }

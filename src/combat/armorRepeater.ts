@@ -1,75 +1,63 @@
 import { setupRepeater } from "../utils/repeaters"
 import { computed, signal } from "../utils/utils"
 
-export const setupArmorRepeater = function(sheet: Sheet<unknown>, talents: Computed<string[]>, armorLevelByEntry: Signal<Record<string, ArmorLevel | null>>, encombrementRecord: Signal<Record<string, number>>) {
+export const setupArmorRepeater = function(whSheet: WarhammerSheet) {
     
-    const allArmors = signal({} as Record<string, Record<"Tête" | "Bras" | "Corps" | "Jambes", number>>)
-
-    // Calcul de l'armure total
+    // Calcul de l'armure totale
     computed(function() {
         const totalArmor = { "Tête": 0, "Bras": 0, "Corps": 0, "Jambes": 0 }
-        each(allArmors(), function(data) {
+        each(whSheet.allArmors(), function(data) {
             totalArmor["Tête"] += data["Tête"]
             totalArmor["Bras"] += data["Bras"]
             totalArmor["Corps"] += data["Corps"]
             totalArmor["Jambes"] += data["Jambes"]
         })
         // Application sur le schéma
-        setArmorSchema(sheet, totalArmor)
-    }, [allArmors])
-
+        setArmorSchema(whSheet.raw(), totalArmor)
+    }, [whSheet.allArmors])
     // Initialisation du repeater
-    setupRepeater(sheet.get("armor_repeater"), setupArmorEditEntry, setupArmorViewEntry(allArmors, talents, armorLevelByEntry, encombrementRecord), onDelete(allArmors, armorLevelByEntry, encombrementRecord))
+    setupRepeater(whSheet, "armor_repeater", setupArmorEditEntry, setupArmorViewEntry(whSheet), onDelete(whSheet))
     
 }
 
-const setupArmorEditEntry = function(entry: Component<ArmorData>) {
-    setupArmorEdit(entry.find)
-}
-
-export const setupArmorCraftSheet = function(sheet: Sheet<ArmorData>) {
-    setupArmorEdit(sheet.get)
-}
-
-const setupArmorEdit = function(get: (s: string) => Component) {
-    get("couverture").on("update", function(cmp) {
-        get("couverture_input").value(cmp.value().join(', '))
+export const setupArmorEditEntry = function(elem: ArmorCraftSheet | Component) {
+    elem.find("couverture").on("update", function(cmp) {
+        elem.find("couverture_input").value(cmp.value().join(', '))
     })
-    get("qualite_armure").on("update", function(cmp) {
-        log(cmp.value())
+    elem.find("qualite_armure").on("update", function(cmp) {
         if(cmp.value() === "Moyenne") {
-            get("non_standard_quality").value(0)
+            elem.find("non_standard_quality").value(0)
         } else {
-            get("non_standard_quality").value(1)
+            elem.find("non_standard_quality").value(1)
         }
     })
 }
 
 // Ajout d'une pièce d'armure au total à sa création
-const setupArmorViewEntry = function(allArmors: Signal<Record<string, Record<"Tête" | "Bras" | "Corps" | "Jambes", number>>>, talents: Computed<string[]>, armorLevelByEntry: Signal<Record<string, ArmorLevel | null>>, encombrementRecord: Signal<Record<string, number>>) {
+export const setupArmorViewEntry = function(whSheet: WarhammerSheet) {
     return function(entry: Component<ArmorData>) {
 
         const drop = signal(entry.find("left_behind").value() as boolean)
     
         // Gestion armure
         computed(function() {
-            const newArmor = allArmors()
+            const newArmor = whSheet.allArmors()
             newArmor[entry.id()] = drop() ? { "Tête": 0, "Bras": 0, "Corps": 0, "Jambes": 0 } : readArmor(entry.value() as ArmorData)
-            allArmors.set(newArmor)
+            whSheet.allArmors.set(newArmor)
         }, [drop])
     
         computed(function() {
             // Gestion encombrement
-            const encombrement = encombrementRecord()
-            encombrement[entry.id()] = drop() || talents().indexOf("robuste") !== -1 ? 0 : entry.value().enc_armure * getQualityCoeff(entry.value().qualite_armure)
-            encombrementRecord.set(encombrement)
-        }, [drop, talents])
+            const encombrement = whSheet.encombrementRecord()
+            encombrement[entry.id()] = drop() || whSheet.talents().indexOf("robuste") !== -1 ? 0 : entry.value().enc_armure * getQualityCoeff(entry.value().qualite_armure)
+            whSheet.encombrementRecord.set(encombrement)
+        }, [drop, whSheet.talents])
 
         // Gestion du niveau d'armure
         computed(function() {
-            const armorLevels = armorLevelByEntry()
+            const armorLevels = whSheet.armorLevelByEntry()
             armorLevels[entry.id()] = drop() ? null : entry.value().type_armure
-            armorLevelByEntry.set(armorLevels)
+            whSheet.armorLevelByEntry.set(armorLevels)
         }, [drop])
     
         // Gestion de la mise de côté de l'objet
@@ -118,23 +106,23 @@ const getQualityCoeff = function(quality: Quality) {
 }
 
 // Supression de la pièce d'armure au delete sur le repeater
-const onDelete = function(allArmors: Signal<Record<string, Record<"Tête" | "Bras" | "Corps" | "Jambes", number>>>, armorLevelByEntry: Signal<Record<string, ArmorLevel | null>>, encombrementRecord: Signal<Record<string, number>>) {
+const onDelete = function(whSheet: WarhammerSheet) {
     return function(entryId: string) {
 
         // Gestion armure
-        const newArmor = allArmors()
+        const newArmor = whSheet.allArmors()
         delete newArmor[entryId]
-        allArmors.set(newArmor)
+        whSheet.allArmors.set(newArmor)
     
         // Gestion encombrement
-        const encombrement = encombrementRecord()
+        const encombrement = whSheet.encombrementRecord()
         delete encombrement[entryId]
-        encombrementRecord.set(encombrement)
+        whSheet.encombrementRecord.set(encombrement)
 
         // Gestion du niveau d'armure
-        const armorLevels = armorLevelByEntry()
+        const armorLevels = whSheet.armorLevelByEntry()
         delete armorLevels[entryId]
-        armorLevelByEntry.set(armorLevels)
+        whSheet.armorLevelByEntry.set(armorLevels)
     }
 }
 

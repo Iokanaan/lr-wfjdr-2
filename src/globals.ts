@@ -1,2 +1,2 @@
-export const globalSheets: Record<number, Sheet<CharData>> = {}
+export const globalSheets: Record<number, WarhammerSheet> = {}
 

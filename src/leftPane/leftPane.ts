@@ -1,105 +1,105 @@
 import { switchCarrier } from "../help/carriers"
 import { computed, signal } from "../utils/utils"
 
-export const setupGold = function(sheet: Sheet, encombrementRecord: Signal<Record<string, number>>) {
-    const enc = encombrementRecord()
-    const gold = signal(sheet.get("gold").value() as number)
-    const silver = signal(sheet.get("silver").value() as number)
-    const copper = signal(sheet.get("copper").value() as number)
-    sheet.get("gold").on("update", function(cmp) { gold.set(cmp.value())})
-    sheet.get("silver").on("update", function(cmp) { silver.set(cmp.value())})
-    sheet.get("copper").on("update", function(cmp) { copper.set(cmp.value())})
+export const setupGold = function(wSheet: WarhammerSheet) {
+    const enc = wSheet.encombrementRecord()
+    const gold = signal(wSheet.find("gold").value() as number)
+    const silver = signal(wSheet.find("silver").value() as number)
+    const copper = signal(wSheet.find("copper").value() as number)
+    wSheet.find("gold").on("update", function(cmp) { gold.set(cmp.value() as number)})
+    wSheet.find("silver").on("update", function(cmp) { silver.set(cmp.value() as number)})
+    wSheet.find("copper").on("update", function(cmp) { copper.set(cmp.value() as number)})
     const totalMoney = computed(function() { return gold() + silver() + copper()}, [gold, silver, copper])
     computed(function() {
-        const enc = encombrementRecord()
+        const enc = wSheet.encombrementRecord()
         enc["gold_enc"] = totalMoney() / 10
-        encombrementRecord.set(enc)
+        wSheet.encombrementRecord.set(enc)
     }, [totalMoney])
 
 }
 
-export const checkEncombrement = function(sheet: Sheet, statSignals: StatSignals, raceSignal: Signal<string>, talents: Computed<string[]>, totalEncombrement: Computed<number>) {
+export const checkEncombrement = function(wSheet: WarhammerSheet) {
     
-    const encMaxCmp = sheet.get("max_encombrement")
-    const encValCmp = sheet.get("encombrement_total")
+    const encMaxCmp = wSheet.find("max_encombrement")
+    const encValCmp = wSheet.find("encombrement_total")
 
     // Calcul de l'encombrement max en fonction de la force
     const encMax = computed(function() {
         let multiplateur = 10
-        if(raceSignal() === "Nain") {
+        if(wSheet.race() === "Nain") {
             multiplateur = 20
         }
-        if(talents().indexOf("animal_de_trait") !== -1) {
+        if(wSheet.talents().indexOf("animal_de_trait") !== -1) {
             multiplateur = 30
         }
-        sheet.get("max_encombrement").text(" / " + (statSignals['F']() * multiplateur).toString())
-        return statSignals['F']() * multiplateur
-    }, [statSignals['F'], raceSignal, talents])
+        wSheet.find("max_encombrement").text(" / " + (wSheet.statSignals['F']() * multiplateur).toString())
+        return wSheet.statSignals['F']() * multiplateur
+    }, [wSheet.statSignals['F'], wSheet.race, wSheet.talents])
 
     computed(function() {
-        encValCmp.text(Math.ceil(totalEncombrement()).toString())
-    }, [totalEncombrement])
+        encValCmp.text(Math.ceil(wSheet.totalEncombrement()).toString())
+    }, [wSheet.totalEncombrement])
 
     // Adaptation des couleurs en fonction de l'encombrement
     computed(function() {
         let malus = 0
-        if(totalEncombrement() > encMax()) {
+        if(wSheet.totalEncombrement() > encMax()) {
             encValCmp.addClass("text-danger")
             encValCmp.removeClass("text-light")
             encMaxCmp.addClass("text-danger")
-            const depassement = totalEncombrement() - encMax()
+            const depassement = wSheet.totalEncombrement() - encMax()
             malus = Math.floor(depassement / 50)
             if(depassement % 50 !== 0) {
                 malus++
             }
-            malus = Math.min(statSignals['M'](), malus)
-            sheet.get("M").addClass("text-danger")
+            malus = Math.min(wSheet.statSignals['M'](), malus)
+            wSheet.find("M").addClass("text-danger")
         } else {
             encValCmp.removeClass("text-danger")
             encValCmp.addClass("text-light")
             encMaxCmp.removeClass("text-danger")
-            sheet.get("M").removeClass("text-danger")
+            wSheet.find("M").removeClass("text-danger")
         }
 
-        sheet.get("M").value(statSignals['M']() - malus)
+        wSheet.find("M").value(wSheet.statSignals['M']() - malus)
 
-    }, [statSignals['M'], encMax, totalEncombrement])
+    }, [wSheet.statSignals['M'], encMax, wSheet.totalEncombrement])
 }
 
 
 
-export const setSleepListener = function(sheet: Sheet, statSignals: StatSignals, talents: Computed<string[]>) {
+export const setSleepListener = function(wSheet: WarhammerSheet) {
 
     // Comme on a besoin de la fortune max pour le sommeil, on déclare le computed ici
     const maxFortune = computed(function() {
-        let max = statSignals["PD"]()
-        if(talents().indexOf("chance") !== -1) {
+        let max = wSheet.statSignals["PD"]()
+        if(wSheet.talents().indexOf("chance") !== -1) {
             max++
         }
-        sheet.get("max_fortune").text(" / " + max)
+        wSheet.find("max_fortune").text(" / " + max)
         return max
-    }, [statSignals["PD"], talents])
+    }, [wSheet.statSignals["PD"], wSheet.talents])
 
     // Click sur le bouton sommeil
-    sheet.get("sleep").on("click", function() {
+    wSheet.find("sleep").on("click", function() {
 
         // On donne un PV si le personnage n'est pas gravement blessé
-        if(statSignals["B_actuel"]() > 3 && statSignals["B_actuel"]() <  (statSignals['B']() as number)) {
-            statSignals["B_actuel"].set(statSignals["B_actuel"]() + 1)
-            sheet.get("B_actuel").value(statSignals["B_actuel"]())
+        if(wSheet.statSignals["B_actuel"]() > 3 && wSheet.statSignals["B_actuel"]() <  (wSheet.statSignals['B']() as number)) {
+            wSheet.statSignals["B_actuel"].set(wSheet.statSignals["B_actuel"]() + 1)
+            wSheet.find("B_actuel").value(wSheet.statSignals["B_actuel"]())
         }
 
         // On restaure les points de fortune
-        sheet.get("fortune_actuel").value(maxFortune())
+        wSheet.find("fortune_actuel").value(maxFortune())
     })
 }
 
-export const setRaceEditor = function(sheet: Sheet, raceSignal: Signal<string>) {
+export const setRaceEditor = function(whSheet: WarhammerSheet) {
 
-    const raceCmp = sheet.get("race")
-    const raceTextCmp = sheet.get("race_txt")
-    const raceLabelCmp = sheet.get("race_label")
-    const customRaceCmp = sheet.get("custom_race") as Component<string>
+    const raceCmp = whSheet.raw().get("race")
+    const raceTextCmp = whSheet.raw().get("race_txt")
+    const raceLabelCmp = whSheet.raw().get("race_label")
+    const customRaceCmp = whSheet.raw().get("custom_race") as Component<string>
 
     // Mode liste déroulante
     raceTextCmp.on("click", function() {
@@ -126,7 +126,7 @@ export const setRaceEditor = function(sheet: Sheet, raceSignal: Signal<string>) 
         customRaceCmp.hide()
         raceTextCmp.text(cmp.value())
         raceTextCmp.show()
-        raceSignal.set(cmp.value())
+        whSheet.race.set(cmp.value())
     })
 
     
@@ -140,12 +140,12 @@ export const setRaceEditor = function(sheet: Sheet, raceSignal: Signal<string>) 
     }
 }
 
-export const setClassEditor = function(sheet: Sheet) {
+export const setClassEditor = function(wSheet: WarhammerSheet) {
 
-    const classCmp = sheet.get("class")
-    const classTextCmp = sheet.get("class_txt")
-    const classLabelCmp = sheet.get("class_label")
-    const customClassCmp = sheet.get("custom_class") as Component<string>
+    const classCmp = wSheet.find("class") as Component<string>
+    const classTextCmp = wSheet.find("class_txt")
+    const classLabelCmp = wSheet.find("class_label")
+    const customClassCmp = wSheet.find("custom_class") as Component<string>
 
     // Mode liste déroulante
     classTextCmp.on("click", function() {
@@ -157,7 +157,7 @@ export const setClassEditor = function(sheet: Sheet) {
     classCmp.on("update", function(cmp: Component<string>) {
         const newCarrier = Tables.get("carriere").get(cmp.value())
         customClassCmp.value(newCarrier.name)
-        switchCarrier(sheet, newCarrier)
+        switchCarrier(wSheet, newCarrier)
     })
 
     // Mode custom 
@@ -186,28 +186,28 @@ export const setClassEditor = function(sheet: Sheet) {
 }
 
 // Initiative
-export const setInitiativeListener = function(sheet: Sheet<CharData>) {
-    sheet.get("init_roll").on("click", function() {
-        const builder = new RollBuilder(sheet)
-        builder.expression("(1d10 + " + sheet.get("Ag").value() + ")[initiative]")
+export const setInitiativeListener = function(wSheet: WarhammerSheet) {
+    wSheet.find("init_roll").on("click", function() {
+        const builder = new RollBuilder(wSheet.raw())
+        builder.expression("(1d10 + " + wSheet.find("Ag").value() + ")[initiative]")
         builder.title("Initiative")
         builder.roll()
     })
 }
 
 
-export const setBlessuresListener = function(sheet: Sheet<CharData>, statSignals: StatSignals) {
+export const setBlessuresListener = function(wSheet: WarhammerSheet) {
 
-    const bActuelCmp = sheet.get("B_actuel")
-    const bMaxCmp = sheet.get("b_max")
+    const bActuelCmp = wSheet.find("B_actuel")
+    const bMaxCmp = wSheet.find("b_max")
 
     // Signal des blessures actuelles
-    statSignals["B_actuel"] = signal(sheet.get("B_actuel").value() as number)
+    wSheet.statSignals["B_actuel"] = signal(wSheet.find("B_actuel").value() as number)
 
     // Adaptation de la couleur en fonction des blessures
     computed(function() {
         // Si blessures <= 3 affichage du texte en rouge
-        if(statSignals["B_actuel"]() <= 3) {
+        if(wSheet.statSignals["B_actuel"]() <= 3) {
             bActuelCmp.addClass("text-danger")
             bActuelCmp.removeClass("text-light")
             bMaxCmp.addClass("text-danger")
@@ -219,10 +219,10 @@ export const setBlessuresListener = function(sheet: Sheet<CharData>, statSignals
             bMaxCmp.removeClass("text-danger")
             bMaxCmp.addClass("text-light")
         }
-    }, [statSignals["B_actuel"]])
+    }, [wSheet.statSignals["B_actuel"]])
 
     // Mise à jour du signal à l'update de l'input
     bActuelCmp.on("update", function(cmp: Component) { 
-        statSignals["B_actuel"].set(cmp.value()) 
+        wSheet.statSignals["B_actuel"].set(cmp.value()) 
     })
 }

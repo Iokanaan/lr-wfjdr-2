@@ -35,6 +35,34 @@ declare global {
 
     type Handler<T> = (t: T) => void
 
+
+    type WarhammerSheet = ExtendedSheet<CharData> & {
+        race: Signal<string>
+        entryStates: Record<string, Record<string, RepeaterState | undefined>>
+        encombrementRecord: Signal<Record<string, number>>
+        statSignals: StatSignals
+        totalEncombrement: Computed<number>
+        talentsByEntry: Signal<Record<string, string>>
+        talents: Computed<string[]>
+        advancedSkillsByEntry: Signal<Record<string, SkillEntryData>>
+        advancedSkills: Computed<string[]>
+        armorLevelByEntry: Signal<Record<string, ArmorLevel | null>>
+        armorLevel: Computed<ArmorLevel | null>
+        weaponsByEntry: Signal<Record<string, WeaponData | null>>
+        malusArmor: Computed<number>
+        allArmors: Signal<Record<string, Record<"Tête" | "Bras" | "Corps" | "Jambes", number>>>
+    }
+
+    type ExtendedSheet<T> = {
+        raw(): Sheet<T>,
+        find(id: string): Component<unknown>,
+        stringId(): string
+    }
+
+    type ArmorCraftSheet = ExtendedSheet<ArmorData> & {
+        find(s: "couverture_input"): Component<string> 
+    }
+
     class RollBuilder {
         constructor(sheet: Sheet<any>)
         expression: (s: string) => RollBuilder

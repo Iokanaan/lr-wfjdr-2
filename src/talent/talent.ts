@@ -29,7 +29,7 @@ Tables.get("magie_mineure").each(function(val) {
     talents_choices["magie_mineure"][val.name] = val.name  
 })
 
-export const setupTalentViewEntry = function(talentsByEntry: Signal<Record<string, string>>) {
+export const setupTalentViewEntry = function(wSheet: WarhammerSheet) {
     return function(entry: Component) {
     
         entry.find("talent_display").on("click", function() {
@@ -48,9 +48,9 @@ export const setupTalentViewEntry = function(talentsByEntry: Signal<Record<strin
             Bindings.send(entry.sheet(), entry.value().talent_name)
         })
     
-        const allTalents = talentsByEntry()
+        const allTalents = wSheet.talentsByEntry()
         allTalents[entry.id()] = entry.value().nom_talent_choice
-        talentsByEntry.set(allTalents)
+        wSheet.talentsByEntry.set(allTalents)
     }
 }
 
@@ -108,11 +108,11 @@ export const setupTalentEditEntry = function(entry: Component<unknown>) {
     })
 }
 
-export const onTalentDelete = function(talentsByEntry: Signal<Record<string, string>>) {
+export const onTalentDelete = function(wSheet: WarhammerSheet) {
     return function(entryId: string) {
         // Gestion encombrement
-        const allTalents = talentsByEntry()
+        const allTalents = wSheet.talentsByEntry()
         delete allTalents[entryId]
-        talentsByEntry.set(allTalents)
+        wSheet.talentsByEntry.set(allTalents)
     }
 }

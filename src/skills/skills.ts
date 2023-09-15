@@ -1,25 +1,25 @@
 import { roll } from "../roll/rollHandler"
 import { computed, signal } from "../utils/utils"
 
-export const setupBasicSkill = function(sheet: Sheet, skill: SkillBasicEntity, statSignals: StatSignals, talents: Computed<string[]>) {
-  setupSkill(sheet.get, skill.cmp_id, skill.stat, skill.name, null, statSignals, talents)
+export const setupBasicSkill = function(wSheet: WarhammerSheet, skill: SkillBasicEntity) {
+  setupSkill(wSheet, skill.cmp_id, skill.stat, skill.name, null, wSheet.statSignals, wSheet.talents)
 }
 
-export const setupSkillViewEntry = function(statSignals: StatSignals, advancedSkillsByEntry: Signal<Record<string, SkillEntryData>>, talents: Computed<string[]>) {
+export const setupSkillViewEntry = function(wSheet: WarhammerSheet) {
   return function(entry: Component<SkillEntryData>) {
-    setupSkill(entry.find, "av", entry.value().comp_stat, entry.value().nom_comp, entry.value().specialite, statSignals, talents)
+    setupSkill(entry, "av", entry.value().comp_stat, entry.value().nom_comp, entry.value().specialite, wSheet.statSignals, wSheet.talents)
   
-    const allAdvancedSkills = advancedSkillsByEntry()
+    const allAdvancedSkills = wSheet.advancedSkillsByEntry()
     allAdvancedSkills[entry.id()] = entry.value()
-    advancedSkillsByEntry.set(allAdvancedSkills)
+    wSheet.advancedSkillsByEntry.set(allAdvancedSkills)
   }
 }
 
-export const onSkillDelete = function(advancedSkillsByEntry: Signal<Record<string, SkillEntryData>>) {
+export const onSkillDelete = function(wSheet: WarhammerSheet) {
   return function(entryId: string) {
-    const allAdvancedSkills = advancedSkillsByEntry()
+    const allAdvancedSkills = wSheet.advancedSkillsByEntry()
     delete allAdvancedSkills[entryId]
-    advancedSkillsByEntry.set(allAdvancedSkills)
+    wSheet.advancedSkillsByEntry.set(allAdvancedSkills)
   }
 }
 
@@ -98,12 +98,12 @@ export const setupSkillEditEntry = function(entry: Component) {
   })
 }
 
-const setupSkill = function(get: (id: string) => Component, skillCmpId: string, stat: Stat, skillName: string, specialite: string | null, statSignals: StatSignals, talents: Computed<string[]>) {
+const setupSkill = function(elem: WarhammerSheet | Component, skillCmpId: string, stat: Stat, skillName: string, specialite: string | null, statSignals: StatSignals, talents: Computed<string[]>) {
 
   // Définition des signaux pour les cases à cocher
-  const signalAq = signal(get('comp_' + skillCmpId + '_acq').value())
-  const signal10 = signal(get('comp_' + skillCmpId + '_10').value())
-  const signal20 = signal(get('comp_' + skillCmpId + '_20').value())
+  const signalAq = signal(elem.find('comp_' + skillCmpId + '_acq').value())
+  const signal10 = signal(elem.find('comp_' + skillCmpId + '_10').value())
+  const signal20 = signal(elem.find('comp_' + skillCmpId + '_20').value())
 
   // Calcul du niveau de compétence
   const signalLevel = computed(
@@ -133,18 +133,18 @@ const setupSkill = function(get: (id: string) => Component, skillCmpId: string, 
           break
       }
       value += getTalentBonus(skillName, specialite, talents())
-      get("comp_" + skillCmpId +"_val").text(value.toString())
+      elem.find("comp_" + skillCmpId +"_val").text(value.toString())
       return value
     }
   , [statSignals[stat], signalLevel, talents])
 
   // Mise à jour des signaux sur les update de checkbox
-  get('comp_' + skillCmpId + '_acq').on('update', function(cmp) { signalAq.set(cmp.value()) })
-  get('comp_' + skillCmpId + '_10').on('update', function(cmp) { signal10.set(cmp.value()) })
-  get('comp_' + skillCmpId + '_20').on('update', function(cmp) { signal20.set(cmp.value()) })
+  elem.find('comp_' + skillCmpId + '_acq').on('update', function(cmp) { signalAq.set(cmp.value()) })
+  elem.find('comp_' + skillCmpId + '_10').on('update', function(cmp) { signal10.set(cmp.value()) })
+  elem.find('comp_' + skillCmpId + '_20').on('update', function(cmp) { signal20.set(cmp.value()) })
   
   // Lancer de compétence
-  get('comp_' + skillCmpId + '_label').on('click', function(cmp) {
+  elem.find('comp_' + skillCmpId + '_label').on('click', function(cmp) {
      roll(cmp.sheet(), cmp.text(), skillVal(), [])
   })
 }
